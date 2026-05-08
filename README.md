@@ -8,12 +8,12 @@ Wix App Market app — a Custom Element Site Widget that lets nonprofits embed Z
 
 ## Live demo (mobile-friendly)
 
-Deployed at **https://zeffy-wix-demo.vercel.app**
+Deployed at **https://zeffy-donate-demo.vercel.app**
 
 | Mode | URL | What it shows |
 |---|---|---|
-| Inline | https://zeffy-wix-demo.vercel.app/pto | Lincoln Elementary PTO — full Zeffy form embedded directly on the page |
-| Button → modal | https://zeffy-wix-demo.vercel.app/shelter | Maple Ridge Animal Rescue — CTA opens form in a modal overlay |
+| Inline | https://zeffy-donate-demo.vercel.app/pto | Lincoln Elementary PTO — full Zeffy form embedded directly on the page |
+| Button → modal | https://zeffy-donate-demo.vercel.app/shelter | Maple Ridge Animal Rescue — CTA opens form in a modal overlay |
 
 Both pages load `widget.js` (the production `element.js`) and render `<zeffy-donation-widget>` for real, with the canonical demo donation form.
 
