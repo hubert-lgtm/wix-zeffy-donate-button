@@ -1,0 +1,23 @@
+{
+  "name": "wix-zeffy-donate-button",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wix Custom Element Site Widget — embed Zeffy donation forms with inline or button-to-popup modes",
+  "author": "Zeffy <support@zeffy.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wix app dev",
+    "build": "wix app build",
+    "release": "wix app release"
+  },
+  "devDependencies": {
+    "@wix/cli": "^1.0.0",
+    "@wix/cli-app": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@wix/sdk-context": "^0.0.1"
+  }
+}

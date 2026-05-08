@@ -1,0 +1,22 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/custom-element.json",
+  "id": "3c52dcad-40d8-4529-9fb8-f62591a54e0b",
+  "name": "Zeffy Donation Widget",
+  "width": {
+    "defaultWidth": 600,
+    "allowStretch": true
+  },
+  "height": {
+    "defaultHeight": 700
+  },
+  "installation": {
+    "autoAddToSite": true,
+    "essential": false
+  },
+  "presets": [
+    {
+      "id": "4e030c93-19b8-413b-bb61-335eb8831c54",
+      "thumbnailUrl": "./presets/thumbnail.png"
+    }
+  ]
+}

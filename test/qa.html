@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeffy Donation Widget — QA Test Suite</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 13px; margin-bottom: 24px; }
+    .scenario { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #ccc; }
+    .scenario.pass { border-left-color: #22c55e; }
+    .scenario.fail { border-left-color: #ef4444; }
+    .scenario.warn { border-left-color: #f59e0b; }
+    .scenario-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+    .badge.pass { background: #dcfce7; color: #15803d; }
+    .badge.fail { background: #fee2e2; color: #b91c1c; }
+    .badge.warn { background: #fef3c7; color: #92400e; }
+    .assertions { margin-top: 8px; font-size: 12px; color: #555; }
+    .assertion { padding: 2px 0; display: flex; gap: 6px; }
+    .assertion::before { content: "✓"; color: #22c55e; font-weight: bold; }
+    .assertion.fail::before { content: "✗"; color: #ef4444; }
+    .assertion.warn::before { content: "⚠"; color: #f59e0b; }
+    .summary { background: #1e293b; color: #fff; border-radius: 8px; padding: 16px; margin-bottom: 24px; display: flex; gap: 24px; }
+    .summary-stat { text-align: center; }
+    .summary-stat .num { font-size: 28px; font-weight: 700; }
+    .summary-stat .label { font-size: 11px; color: #94a3b8; }
+    .widget-preview { display: none; position: absolute; left: -9999px; }
+    #log { font-size: 11px; color: #666; background: #f8f8f8; border-radius: 4px; padding: 12px; margin-top: 16px; white-space: pre-wrap; max-height: 200px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Zeffy Donation Widget — QA Report</h1>
+  <div class="subtitle">10 scenarios · automated assertions · generated <span id="ts"></span></div>
+
+  <div id="summary" class="summary">
+    <div class="summary-stat"><div class="num" id="s-pass" style="color:#4ade80">—</div><div class="label">PASS</div></div>
+    <div class="summary-stat"><div class="num" id="s-fail" style="color:#f87171">—</div><div class="label">FAIL</div></div>
+    <div class="summary-stat"><div class="num" id="s-warn" style="color:#fbbf24">—</div><div class="label">WARN</div></div>
+    <div class="summary-stat"><div class="num" id="s-total">—</div><div class="label">TOTAL</div></div>
+  </div>
+
+  <div id="results"></div>
+  <div class="widget-preview" id="sandbox"></div>
+
+  <script src="../src/site/widgets/custom-elements/zeffy-donation-widget/element.js"></script>
+  <script>
+  document.getElementById('ts').textContent = new Date().toLocaleString();
+
+  /* ── helpers ─────────────────────────────────────────────── */
+
+  function makeWidget(attrs) {
+    const el = document.createElement('zeffy-donation-widget');
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    const sandbox = document.getElementById('sandbox');
+    sandbox.innerHTML = '';
+    sandbox.appendChild(el);
+    return el;
+  }
+
+  function shadow(el) { return el.shadowRoot; }
+
+  function q(el, sel) {
+    const s = shadow(el);
+    if (!s) return null;
+    return s.querySelector(sel);
+  }
+
+  function qAll(el, sel) {
+    const s = shadow(el);
+    if (!s) return [];
+    return Array.from(s.querySelectorAll(sel));
+  }
+
+  function dispatch(el, type, opts) {
+    el.dispatchEvent(new (type === 'keydown' ? KeyboardEvent : MouseEvent)(type, { bubbles: true, cancelable: true, ...opts }));
+  }
+
+  /* ── test runner ─────────────────────────────────────────── */
+
+  const results = [];
+
+  function scenario(id, name, fn) {
+    const assertions = [];
+    let status = 'pass';
+
+    function assert(label, condition, level = 'fail') {
+      const passed = !!condition;
+      if (!passed && level === 'fail') status = 'fail';
+      if (!passed && level === 'warn' && status !== 'fail') status = 'warn';
+      assertions.push({ label, passed, level: passed ? 'pass' : level });
+    }
+
+    try {
+      fn(assert);
+    } catch (e) {
+      assertions.push({ label: `Exception: ${e.message}`, passed: false, level: 'fail' });
+      status = 'fail';
+    }
+
+    results.push({ id, name, status, assertions });
+  }
+
+  /* ══ SCENARIO 1 — Onboarding: no URL ════════════════════════ */
+  scenario(1, 'Onboarding state — no URL set', (assert) => {
+    const el = makeWidget({});
+    const s = shadow(el);
+    assert('Shadow root exists', s);
+    assert('No <iframe> in shadow DOM', qAll(el, 'iframe').length === 0);
+    assert('No <button class="zeffy-btn"> in shadow DOM', !q(el, 'button.zeffy-btn'));
+    assert('.zeffy-state-box.onboarding is present', !!q(el, '.zeffy-state-box.onboarding'));
+    const link = q(el, 'a');
+    assert('<a> link exists in onboarding box', !!link);
+    assert('<a> href contains zeffy.com', link && link.href.indexOf('zeffy.com') !== -1);
+  });
+
+  /* ══ SCENARIO 2 — Error: non-Zeffy domain ═══════════════════ */
+  scenario(2, 'Error state — non-Zeffy domain', (assert) => {
+    const el = makeWidget({ 'data-form-url': 'https://www.evil.com/donation-form/my-form' });
+    assert('No <iframe> in shadow DOM', qAll(el, 'iframe').length === 0);
+    assert('.zeffy-state-box.error is present', !!q(el, '.zeffy-state-box.error'));
+    assert('No onboarding box shown', !q(el, '.zeffy-state-box.onboarding'));
+  });
+
+  /* ══ SCENARIO 3 — Error: Zeffy domain but wrong path ════════ */
+  scenario(3, 'Error state — zeffy.com but no /donation-form/ in path', (assert) => {
+    const el = makeWidget({ 'data-form-url': 'https://www.zeffy.com/en-US/peer-to-peer/my-campaign' });
+    assert('No <iframe> in shadow DOM', qAll(el, 'iframe').length === 0);
+    assert('.zeffy-state-box.error is present', !!q(el, '.zeffy-state-box.error'));
+  });
+
+  /* ══ SCENARIO 4 — Inline mode: valid URL, URL transform ═════ */
+  scenario(4, 'Inline mode — valid URL, correct embed transform', (assert) => {
+    const el = makeWidget({
+      'data-display-mode': 'inline',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug'
+    });
+    const iframes = qAll(el, 'iframe');
+    assert('Exactly 1 <iframe> present', iframes.length === 1);
+    const src = iframes[0] && iframes[0].src;
+    assert('iframe.src contains /embed/donation-form/', src && src.indexOf('/embed/donation-form/') !== -1);
+    assert('iframe.src does NOT contain locale /en-US/', src && src.indexOf('/en-US/') === -1);
+    assert('iframe.src contains correct slug', src && src.indexOf('test-slug') !== -1);
+    assert('iframe.src equals expected embed URL', src === 'https://www.zeffy.com/embed/donation-form/test-slug');
+    assert('No .zeffy-btn button in shadow', !q(el, '.zeffy-btn'));
+    assert('No modal overlay present', !q(el, '.zeffy-modal-overlay'));
+  });
+
+  /* ══ SCENARIO 5 — URL transform: locale variants ════════════ */
+  scenario(5, 'URL transform — multiple locale variants all strip correctly', (assert) => {
+    const cases = [
+      ['https://www.zeffy.com/en-US/donation-form/slug-abc',  'https://www.zeffy.com/embed/donation-form/slug-abc'],
+      ['https://www.zeffy.com/fr-CA/donation-form/slug-abc',  'https://www.zeffy.com/embed/donation-form/slug-abc'],
+      ['https://www.zeffy.com/es-MX/donation-form/slug-abc',  'https://www.zeffy.com/embed/donation-form/slug-abc'],
+      ['https://www.zeffy.com/en/donation-form/slug-abc',     'https://www.zeffy.com/embed/donation-form/slug-abc'],
+      ['https://www.zeffy.com/donation-form/slug-abc',        'https://www.zeffy.com/embed/donation-form/slug-abc'],
+    ];
+    cases.forEach(([input, expected]) => {
+      const el = makeWidget({ 'data-display-mode': 'inline', 'data-form-url': input });
+      const iframes = qAll(el, 'iframe');
+      const src = iframes[0] && iframes[0].src;
+      assert(`"${input.split('/').slice(-2).join('/')}" → correct embed URL`, src === expected);
+    });
+
+    // URL with query string — should be stripped
+    const elQ = makeWidget({ 'data-display-mode': 'inline', 'data-form-url': 'https://www.zeffy.com/en-US/donation-form/slug-abc?ref=partner' });
+    const srcQ = qAll(elQ, 'iframe')[0] && qAll(elQ, 'iframe')[0].src;
+    assert('Query params stripped from embed URL', srcQ && srcQ.indexOf('?') === -1);
+
+    // URL with fragment — should be stripped
+    const elH = makeWidget({ 'data-display-mode': 'inline', 'data-form-url': 'https://www.zeffy.com/en-US/donation-form/slug-abc#section' });
+    const srcH = qAll(elH, 'iframe')[0] && qAll(elH, 'iframe')[0].src;
+    assert('Fragment stripped from embed URL', srcH && srcH.indexOf('#') === -1);
+  });
+
+  /* ══ SCENARIO 6 — Button mode: render, no pre-rendered iframe */
+  scenario(6, 'Button mode — button renders, no pre-rendered iframe', (assert) => {
+    const el = makeWidget({
+      'data-display-mode': 'button',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug',
+      'data-button-text': 'Support Us'
+    });
+    const btn = q(el, '.zeffy-btn');
+    assert('.zeffy-btn button is present', !!btn);
+    assert('Button text matches data-button-text', btn && btn.textContent.trim() === 'Support Us');
+    assert('No <iframe> pre-rendered before click', qAll(el, 'iframe').length === 0);
+    assert('No modal overlay present before click', !q(el, '.zeffy-modal-overlay'));
+    assert('Button is not disabled', btn && !btn.disabled);
+  });
+
+  /* ══ SCENARIO 7 — Modal: open + close via X button ══════════ */
+  scenario(7, 'Modal lifecycle — open then close via × button', (assert) => {
+    const el = makeWidget({
+      'data-display-mode': 'button',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug',
+      'data-button-text': 'Donate'
+    });
+    const btn = q(el, '.zeffy-btn');
+    assert('Button found before open', !!btn);
+
+    // Open modal
+    btn && btn.click();
+    const overlay = q(el, '.zeffy-modal-overlay');
+    assert('Modal overlay appears after button click', !!overlay);
+    const iframes = qAll(el, 'iframe');
+    assert('Exactly 1 iframe inside modal', iframes.length === 1);
+    const src = iframes[0] && iframes[0].src;
+    assert('Modal iframe.src is embed URL', src && src.indexOf('/embed/donation-form/test-slug') !== -1);
+
+    // Close via X
+    const closeBtn = q(el, '.zeffy-modal-close');
+    assert('Close button (×) exists', !!closeBtn);
+    closeBtn && closeBtn.click();
+    assert('Overlay removed from shadow DOM after close', !q(el, '.zeffy-modal-overlay'));
+    assert('No orphaned iframe after close', qAll(el, 'iframe').length === 0);
+
+    // Re-open (state reset check)
+    const btn2 = q(el, '.zeffy-btn');
+    btn2 && btn2.click();
+    assert('Modal reopens after close (state reset)', !!q(el, '.zeffy-modal-overlay'));
+    // Cleanup
+    const cb2 = q(el, '.zeffy-modal-close');
+    cb2 && cb2.click();
+  });
+
+  /* ══ SCENARIO 8 — Modal: close via Escape key ═══════════════ */
+  scenario(8, 'Modal lifecycle — close via Escape key', (assert) => {
+    const el = makeWidget({
+      'data-display-mode': 'button',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug'
+    });
+    const btn = q(el, '.zeffy-btn');
+    btn && btn.click();
+    assert('Modal opens before Escape test', !!q(el, '.zeffy-modal-overlay'));
+
+    // Press Escape
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    assert('Modal removed after Escape keydown', !q(el, '.zeffy-modal-overlay'));
+    assert('No orphaned iframe after Escape close', qAll(el, 'iframe').length === 0);
+
+    // Verify listener cleanup: a 2nd Escape should NOT throw
+    let threw = false;
+    try { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); }
+    catch(e) { threw = true; }
+    assert('Second Escape after close does not throw', !threw, 'warn');
+  });
+
+  /* ══ SCENARIO 9 — Modal: close via overlay click ════════════ */
+  scenario(9, 'Modal lifecycle — overlay click closes, inner click does not', (assert) => {
+    const el = makeWidget({
+      'data-display-mode': 'button',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug'
+    });
+    const btn = q(el, '.zeffy-btn');
+    btn && btn.click();
+    assert('Modal opens before overlay-click test', !!q(el, '.zeffy-modal-overlay'));
+
+    // Click inside the modal box — should NOT close
+    const box = q(el, '.zeffy-modal-box');
+    if (box) {
+      box.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    }
+    assert('Click on inner modal box does NOT close modal', !!q(el, '.zeffy-modal-overlay'));
+
+    // Click on overlay backdrop — should close
+    const overlay = q(el, '.zeffy-modal-overlay');
+    if (overlay) {
+      const evt = new MouseEvent('click', { bubbles: true, cancelable: true });
+      Object.defineProperty(evt, 'target', { value: overlay, configurable: true });
+      overlay.dispatchEvent(evt);
+    }
+    assert('Click on overlay backdrop closes modal', !q(el, '.zeffy-modal-overlay'));
+    assert('No orphaned iframe after overlay close', qAll(el, 'iframe').length === 0);
+  });
+
+  /* ══ SCENARIO 10 — Customization: dimensions + colors ═══════ */
+  scenario(10, 'Attribute customization — dimensions and colors applied', (assert) => {
+    // Inline: custom width and height
+    const elInline = makeWidget({
+      'data-display-mode': 'inline',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug',
+      'data-embed-width': '850',
+      'data-embed-width-unit': 'px',
+      'data-embed-height': '500'
+    });
+    const iframeInline = q(elInline, 'iframe');
+    assert('Inline iframe present', !!iframeInline);
+    assert('iframe width is 850px', iframeInline && iframeInline.style.width === '850px');
+    assert('iframe height is 500px', iframeInline && iframeInline.style.height === '500px');
+
+    // Inline: percent width
+    const elPct = makeWidget({
+      'data-display-mode': 'inline',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug',
+      'data-embed-width': '75',
+      'data-embed-width-unit': '%'
+    });
+    const iframePct = q(elPct, 'iframe');
+    assert('iframe width is 75%', iframePct && iframePct.style.width === '75%');
+
+    // Button: custom bg color, text color, label
+    const elBtn = makeWidget({
+      'data-display-mode': 'button',
+      'data-form-url': 'https://www.zeffy.com/en-US/donation-form/test-slug',
+      'data-button-text': 'Give Monthly',
+      'data-button-bg-color': '#ff3366',
+      'data-button-text-color': '#ffffff'
+    });
+    const btn = q(elBtn, '.zeffy-btn');
+    assert('Button text is "Give Monthly"', btn && btn.textContent.trim() === 'Give Monthly');
+    assert('Button background color is #ff3366', btn && btn.style.backgroundColor.toLowerCase().replace(/\s/g,'') === 'rgb(255,51,102)'.replace(/\s/g,''));
+    assert('Button text color is #ffffff', btn && (btn.style.color === '#ffffff' || btn.style.color === 'rgb(255, 255, 255)'));
+  });
+
+  /* ── render results ──────────────────────────────────────── */
+
+  const container = document.getElementById('results');
+  let totalPass = 0, totalFail = 0, totalWarn = 0;
+
+  results.forEach(r => {
+    const el = document.createElement('div');
+    el.className = `scenario ${r.status}`;
+
+    const passCount = r.assertions.filter(a => a.passed).length;
+    const total = r.assertions.length;
+
+    el.innerHTML = `
+      <div class="scenario-title">
+        <span>Scenario ${r.id}: ${r.name}</span>
+        <span class="badge ${r.status}">${r.status.toUpperCase()} (${passCount}/${total})</span>
+      </div>
+      <div class="assertions">
+        ${r.assertions.map(a => `<div class="assertion ${a.passed ? '' : a.level}">${a.label}</div>`).join('')}
+      </div>
+    `;
+    container.appendChild(el);
+
+    if (r.status === 'pass') totalPass++;
+    else if (r.status === 'fail') totalFail++;
+    else totalWarn++;
+  });
+
+  document.getElementById('s-pass').textContent = totalPass;
+  document.getElementById('s-fail').textContent = totalFail;
+  document.getElementById('s-warn').textContent = totalWarn;
+  document.getElementById('s-total').textContent = results.length;
+  </script>
+</body>
+</html>
