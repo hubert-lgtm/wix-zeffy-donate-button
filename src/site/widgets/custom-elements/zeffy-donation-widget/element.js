@@ -4,15 +4,15 @@
  * Vanilla JS, no external dependencies, no imports.
  * Registers: <zeffy-donation-widget>
  *
- * Observed attributes (all data-prefixed, mapped from Wix props):
- *   data-display-mode       "inline" | "button"
- *   data-form-url           Full zeffy.com donation-form URL (user-facing format)
- *   data-embed-width        number
- *   data-embed-width-unit   "%" | "px"
- *   data-embed-height       number
- *   data-button-text        string
- *   data-button-bg-color    CSS color string
- *   data-button-text-color  CSS color string
+ * Observed attributes (kebab-case, set by panel via widget.setProp):
+ *   display-mode       "inline" | "button"
+ *   form-url           Full zeffy.com donation-form URL (user-facing format)
+ *   embed-width        number (string-encoded)
+ *   embed-width-unit   "%" | "px"
+ *   embed-height       number (string-encoded)
+ *   button-text        string
+ *   button-bg-color    CSS color string
+ *   button-text-color  CSS color string
  *
  * URL transformation:
  *   In:  https://www.zeffy.com/[locale]/donation-form/[slug][?query]
@@ -154,14 +154,14 @@
 
     static get observedAttributes() {
       return [
-        'data-display-mode',
-        'data-form-url',
-        'data-embed-width',
-        'data-embed-width-unit',
-        'data-embed-height',
-        'data-button-text',
-        'data-button-bg-color',
-        'data-button-text-color',
+        'display-mode',
+        'form-url',
+        'embed-width',
+        'embed-width-unit',
+        'embed-height',
+        'button-text',
+        'button-bg-color',
+        'button-text-color',
       ];
     }
 
@@ -184,14 +184,14 @@
     }
 
     _render() {
-      var mode      = this._prop('data-display-mode', 'inline');
-      var formUrl   = this._prop('data-form-url', '');
-      var width     = this._propNum('data-embed-width', 100);
-      var widthUnit = this._prop('data-embed-width-unit', '%');
-      var height    = this._propNum('data-embed-height', 700);
-      var btnText   = this._prop('data-button-text', 'Donate Now');
-      var btnBg     = this._prop('data-button-bg-color', '#007bff');
-      var btnColor  = this._prop('data-button-text-color', '#ffffff');
+      var mode      = this._prop('display-mode', 'inline');
+      var formUrl   = this._prop('form-url', '');
+      var width     = this._propNum('embed-width', 100);
+      var widthUnit = this._prop('embed-width-unit', '%');
+      var height    = this._propNum('embed-height', 700);
+      var btnText   = this._prop('button-text', 'Donate Now');
+      var btnBg     = this._prop('button-bg-color', '#007bff');
+      var btnColor  = this._prop('button-text-color', '#ffffff');
 
       var embedUrl = null;
       var state = 'ok';

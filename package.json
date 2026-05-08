@@ -8,16 +8,28 @@
   "scripts": {
     "dev": "wix app dev",
     "build": "wix app build",
-    "release": "wix app release"
+    "release": "wix app release",
+    "preview": "wix app preview",
+    "logs": "wix app logs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wix/design-system": "^1.0.0",
+    "@wix/editor": "^1.0.0",
+    "@wix/sdk-context": "^0.0.1",
+    "@wix/wix-ui-icons-common": "^3.0.0",
+    "react": "16.14.0",
+    "react-dom": "16.14.0"
   },
   "devDependencies": {
+    "@types/react": "^16.0.0",
+    "@types/react-dom": "^16.0.0",
     "@wix/cli": "^1.0.0",
-    "@wix/cli-app": "^1.0.0"
+    "@wix/cli-app": "^1.0.0",
+    "@wix/sdk-types": "^1.0.0",
+    "typescript": "^5.4.0"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "@wix/sdk-context": "^0.0.1"
   }
 }
