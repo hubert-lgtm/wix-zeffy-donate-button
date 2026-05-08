@@ -151,9 +151,11 @@ const Panel: FC = () => {
               <NumberInput
                 value={Number(embedWidth)}
                 min={1}
-                max={5000}
+                max={embedWidthUnit === '%' ? 100 : 9999}
                 onChange={(value) => {
-                  const n = value === null || value === undefined ? Number(DEFAULTS.embedWidth) : Number(value);
+                  const raw = value === null || value === undefined ? Number(DEFAULTS.embedWidth) : Number(value);
+                  // Bug B Part 1 fix: clamp to 100 when unit is %
+                  const n = embedWidthUnit === '%' ? Math.min(raw, 100) : raw;
                   const v = String(n);
                   setEmbedWidth(v);
                   update(PROP_KEYS.embedWidth, v);
@@ -172,6 +174,11 @@ const Panel: FC = () => {
                 onSelect={(opt) => {
                   if (!opt) return;
                   const v = String(opt.id);
+                  // Bug B Part 1 fix: clamp current width value when switching to %
+                  if (v === '%' && Number(embedWidth) > 100) {
+                    setEmbedWidth('100');
+                    update(PROP_KEYS.embedWidth, '100');
+                  }
                   setEmbedWidthUnit(v);
                   update(PROP_KEYS.embedWidthUnit, v);
                 }}
