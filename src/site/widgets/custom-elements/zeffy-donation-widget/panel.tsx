@@ -215,7 +215,12 @@ const Panel: FC = () => {
             <FormField label="Button background color">
               <ColorInput
                 value={buttonBgColor}
-                onConfirm={(value) => {
+                onChange={(value: string | object) => {
+                  const v = String(value ?? DEFAULTS.buttonBgColor);
+                  setButtonBgColor(v);
+                  update(PROP_KEYS.buttonBgColor, v);
+                }}
+                onConfirm={(value: string | object) => {
                   const v = String(value ?? DEFAULTS.buttonBgColor);
                   setButtonBgColor(v);
                   update(PROP_KEYS.buttonBgColor, v);
@@ -227,7 +232,12 @@ const Panel: FC = () => {
             <FormField label="Button text color">
               <ColorInput
                 value={buttonTextColor}
-                onConfirm={(value) => {
+                onChange={(value: string | object) => {
+                  const v = String(value ?? DEFAULTS.buttonTextColor);
+                  setButtonTextColor(v);
+                  update(PROP_KEYS.buttonTextColor, v);
+                }}
+                onConfirm={(value: string | object) => {
                   const v = String(value ?? DEFAULTS.buttonTextColor);
                   setButtonTextColor(v);
                   update(PROP_KEYS.buttonTextColor, v);
