@@ -193,6 +193,8 @@
       var btnBg     = this._prop('button-bg-color', '#007bff');
       var btnColor  = this._prop('button-text-color', '#ffffff');
 
+      this.style.minHeight = (mode === 'button') ? '40px' : '200px';
+
       var embedUrl = null;
       var state = 'ok';
 
@@ -237,6 +239,7 @@
     }
 
     _buildInline(embedUrl, width, widthUnit, height) {
+      var safeWidth = (widthUnit === '%' && width > 100) ? 100 : width;
       var iframe = document.createElement('iframe');
       iframe.className = 'zeffy-iframe';
       iframe.src = embedUrl;
@@ -244,7 +247,7 @@
       iframe.setAttribute('allowtransparency', 'true');
       iframe.setAttribute('scrolling', 'yes');
       iframe.setAttribute('frameborder', '0');
-      iframe.style.width = width + widthUnit;
+      iframe.style.width = safeWidth + widthUnit;
       iframe.style.height = height + 'px';
       return iframe;
     }
