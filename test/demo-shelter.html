@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maple Ridge Animal Rescue — Every dog deserves a porch to wait on</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Lora', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            forest: { 700: '#2c4a3e', 800: '#1f3a30', 900: '#142821' },
+            cream: { 50: '#fbf8f3', 100: '#f5efe1', 200: '#ead9b8' },
+            rust: '#a04a2a',
+            terracotta: '#d4825c',
+          },
+        },
+      },
+    };
+  </script>
+  <script src="../src/site/widgets/custom-elements/zeffy-donation-widget/element.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    h1, h2, h3, .display { font-family: 'Lora', serif; }
+  </style>
+</head>
+<body class="bg-cream-50 text-forest-900">
+
+  <header class="bg-white border-b border-cream-200">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-forest-800 text-cream-100 flex items-center justify-center font-bold text-lg display">M</div>
+        <div>
+          <div class="font-bold text-forest-900 leading-tight">Maple Ridge</div>
+          <div class="text-xs text-forest-700/70 leading-tight">Animal Rescue</div>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-forest-800">
+        <a href="#mission" class="hover:text-rust">Our Story</a>
+        <a href="#pets" class="hover:text-rust">Adoptable Pets</a>
+        <a href="#stats" class="hover:text-rust">Impact</a>
+        <a href="#donate" class="hover:text-rust">Donate</a>
+        <a href="#donate" class="bg-rust text-white px-4 py-2 rounded-full hover:bg-rust/90">Donate</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative">
+    <div class="max-w-6xl mx-auto px-6 pt-20 pb-20 grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <span class="inline-block bg-cream-200 text-forest-800 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-6">Foster-based · Volunteer-run</span>
+        <h1 class="text-5xl md:text-6xl font-bold leading-[1.05] text-forest-900 mb-6 display">Every dog deserves<br/><em>a porch to wait on</em>.</h1>
+        <p class="text-lg text-forest-700 mb-8 leading-relaxed">We pull dogs and cats out of overcrowded shelters in and around Maple Ridge — and get them home.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#donate" class="bg-rust text-white px-6 py-3 rounded-full font-semibold hover:bg-rust/90">Donate</a>
+          <a href="#foster" class="bg-white border border-forest-700 text-forest-800 px-6 py-3 rounded-full font-semibold hover:bg-forest-700 hover:text-white transition">Foster a pet</a>
+        </div>
+      </div>
+      <div>
+        <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=900&q=80" alt="Rescue dog on porch" class="rounded-3xl shadow-2xl w-full aspect-[4/5] object-cover" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission -->
+  <section id="mission" class="bg-forest-800 text-cream-100 py-20">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cream-200 mb-4">What we do</h2>
+      <p class="text-2xl md:text-3xl leading-relaxed display">
+        Maple Ridge takes in dogs and cats most shelters can't keep — seniors, medical cases, owner surrenders with nowhere else to go. We don't have a building. Every animal lives in a foster home until adoption, where they get vet care, behavior rehab, and the time it takes to settle.
+      </p>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section id="stats" class="py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl md:text-5xl font-bold text-forest-900 display mb-3">2025 by the numbers</h2>
+        <p class="text-forest-700">A small rescue with a big year.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div class="bg-white rounded-2xl p-6 border border-cream-200 text-center">
+          <div class="text-4xl md:text-5xl font-bold text-rust display">312</div>
+          <div class="text-sm text-forest-700/80 mt-2">Pets adopted</div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-cream-200 text-center">
+          <div class="text-4xl md:text-5xl font-bold text-rust display">47</div>
+          <div class="text-sm text-forest-700/80 mt-2">Currently in foster</div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-cream-200 text-center">
+          <div class="text-4xl md:text-5xl font-bold text-rust display">89</div>
+          <div class="text-sm text-forest-700/80 mt-2">Active foster homes</div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-cream-200 text-center">
+          <div class="text-4xl md:text-5xl font-bold text-rust display">$78,400</div>
+          <div class="text-sm text-forest-700/80 mt-2">Vet care this year</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured pets -->
+  <section id="pets" class="py-20 bg-cream-100">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="mb-12 max-w-2xl">
+        <h2 class="text-4xl md:text-5xl font-bold text-forest-900 display mb-3">Looking for a home</h2>
+        <p class="text-forest-700">Three pets currently in our care. Donations cover their vet bills, food, and time to settle in.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&q=80" alt="Bella" class="w-full aspect-square object-cover" />
+          <div class="p-6">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-2xl font-bold text-forest-900 display">Bella</h3>
+              <span class="text-sm text-forest-700/70">Hound mix · 4 yrs</span>
+            </div>
+            <p class="text-sm text-forest-700/90 mb-4 leading-relaxed">Came in heartworm-positive after her family lost their housing. Calm, leans into every hug, walks better on a leash than most dogs twice her age.</p>
+            <div class="bg-cream-50 rounded-xl p-3 text-sm">
+              <span class="text-rust font-bold">Sponsor Bella's heartworm treatment:</span> $250
+            </div>
+          </div>
+        </article>
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&q=80" alt="Otis" class="w-full aspect-square object-cover" />
+          <div class="p-6">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-2xl font-bold text-forest-900 display">Otis</h3>
+              <span class="text-sm text-forest-700/70">Tabby mix · 9 yrs</span>
+            </div>
+            <p class="text-sm text-forest-700/90 mb-4 leading-relaxed">Surrendered when his owner moved into assisted living. Quiet, sleeps on whatever you're reading, asks for nothing except a warm spot and dinner on time.</p>
+            <div class="bg-cream-50 rounded-xl p-3 text-sm">
+              <span class="text-rust font-bold">Cover Otis's senior bloodwork:</span> $180
+            </div>
+          </div>
+        </article>
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1551717743-49959800b1f6?w=600&q=80" alt="Juno" class="w-full aspect-square object-cover" />
+          <div class="p-6">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-2xl font-bold text-forest-900 display">Juno</h3>
+              <span class="text-sm text-forest-700/70">Shepherd mix · 1 yr</span>
+            </div>
+            <p class="text-sm text-forest-700/90 mb-4 leading-relaxed">Found tied to a fence outside the feed store last March. Smart, a little anxious in new places, and learning that hands aren't scary.</p>
+            <div class="bg-cream-50 rounded-xl p-3 text-sm">
+              <span class="text-rust font-bold">Fund Juno's training & food:</span> $150
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Donate (with Zeffy widget in BUTTON mode) -->
+  <section id="donate" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-5 gap-12">
+      <div class="lg:col-span-2">
+        <span class="inline-block bg-rust/10 text-rust px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-5">Donate</span>
+        <h2 class="text-4xl md:text-5xl font-bold text-forest-900 display leading-[1.1] mb-6">Where your money goes.</h2>
+        <p class="text-lg text-forest-700 leading-relaxed mb-6">
+          We don't take government funding. Every dollar comes from people like you, and it goes straight to the animals.
+        </p>
+        <ul class="space-y-3 text-forest-700 mb-8">
+          <li class="flex justify-between border-b border-cream-200 pb-2"><span>Vet intake exam</span><span class="font-bold text-rust">$85</span></li>
+          <li class="flex justify-between border-b border-cream-200 pb-2"><span>Spay or neuter</span><span class="font-bold text-rust">$220</span></li>
+          <li class="flex justify-between border-b border-cream-200 pb-2"><span>Heartworm treatment</span><span class="font-bold text-rust">~$600</span></li>
+          <li class="flex justify-between border-b border-cream-200 pb-2"><span>Monthly food + litter, one foster</span><span class="font-bold text-rust">$45</span></li>
+          <li class="flex justify-between"><span>Parvo treatment (full case)</span><span class="font-bold text-rust">~$1,200</span></li>
+        </ul>
+        <blockquote class="border-l-4 border-rust pl-5 text-forest-700/90 italic">
+          "I started fostering because I figured I had a spare room. Three years and 22 dogs later, I can tell you exactly where the money goes — it's into the animal sleeping at the foot of my bed tonight."
+          <footer class="not-italic text-sm font-semibold text-forest-900 mt-3">— Sarah K., foster volunteer since 2023</footer>
+        </blockquote>
+      </div>
+      <div class="lg:col-span-3 flex items-center">
+        <div class="bg-cream-50 border border-cream-200 rounded-3xl p-10 w-full text-center">
+          <h3 class="text-3xl font-bold text-forest-900 display mb-3">Help us say yes.</h3>
+          <p class="text-forest-700 mb-8 max-w-md mx-auto">Your donation is the difference between saying yes and saying we're full.</p>
+          <!-- Widget in BUTTON mode → modal -->
+          <zeffy-donation-widget
+            display-mode="button"
+            form-url="https://www.zeffy.com/en-US/donation-form/zeffy-demo-donation-form"
+            button-text="Donate to Maple Ridge"
+            button-bg-color="#a04a2a"
+            button-text-color="#ffffff"></zeffy-donation-widget>
+          <p class="text-xs text-forest-700/60 mt-6">100% of your gift goes to Maple Ridge. Zeffy charges no fees.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-forest-900 text-cream-100/70 py-10 text-sm">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-4">
+      <div>
+        <div class="font-bold text-cream-100 mb-1">Maple Ridge Animal Rescue</div>
+        <div>P.O. Box 188 · Maple Ridge, MN 55801</div>
+      </div>
+      <div class="text-cream-100/50">A 501(c)(3) nonprofit. All donations are tax-deductible.</div>
+    </div>
+  </footer>
+
+</body>
+</html>
