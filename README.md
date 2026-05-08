@@ -6,16 +6,24 @@ Wix App Market app — a Custom Element Site Widget that lets nonprofits embed Z
 - **Dev site:** Dev Sitex 1616027752
 - **Linear:** [MAR-20](https://linear.app/zeffy/issue/MAR-20)
 
-## Live demo (mobile-friendly)
+## Live demos (mobile-friendly)
 
+### Polished standalone demos (Vercel)
 Deployed at **https://zeffy-donate-demo.vercel.app**
 
-| Mode | URL | What it shows |
-|---|---|---|
-| Inline | https://zeffy-donate-demo.vercel.app/pto | Lincoln Elementary PTO — full Zeffy form embedded directly on the page |
-| Button → modal | https://zeffy-donate-demo.vercel.app/shelter | Maple Ridge Animal Rescue — CTA opens form in a modal overlay |
+| URL | What it shows |
+|---|---|
+| `/pto` | Lincoln Elementary PTO — full hero + mission + programs + events + Zeffy form embedded inline |
+| `/shelter` | Maple Ridge Animal Rescue — full hero + stats + featured pets + Zeffy form via button-modal |
+| `/pto-embed` | PTO content sections (no hero, no widget) — designed for iframe embed inside Wix |
+| `/shelter-embed` | Shelter content sections (no hero, no widget) — designed for iframe embed inside Wix |
 
-Both pages load `widget.js` (the production `element.js`) and render `<zeffy-donation-widget>` for real, with the canonical demo donation form.
+The standalone demos load `widget.js` (the production `element.js`) and render `<zeffy-donation-widget>` for real with the canonical Zeffy demo donation form.
+
+### Live Wix dev site
+**https://dev-sitex-1616027752.wix-development-sites.org/**
+
+This is the Wix App actually installed on a published Wix Studio Harmony site, with v1.1.0 of the Zeffy Donation Widget. The form renders, the panel opens, the install flow works.
 
 ## Repo layout
 

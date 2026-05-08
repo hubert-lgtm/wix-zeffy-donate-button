@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maple Ridge — Embed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Lora', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            forest: { 700: '#2c4a3e', 800: '#1f3a30', 900: '#142821' },
+            cream: { 50: '#fbf8f3', 100: '#f5efe1', 200: '#ead9b8' },
+            rust: '#a04a2a',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
+    h1, h2, h3, .display { font-family: 'Lora', serif; }
+    html, body { background: transparent; }
+  </style>
+</head>
+<body class="text-forest-900">
+
+  <!-- Mission -->
+  <section class="bg-forest-800 text-cream-100 py-16">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cream-200 mb-3">What we do</h2>
+      <p class="text-xl md:text-2xl leading-relaxed display">
+        Maple Ridge takes in dogs and cats most shelters can't keep — seniors, medical cases, owner surrenders with nowhere else to go. We don't have a building. Every animal lives in a foster home until adoption, where they get vet care, behavior rehab, and the time it takes to settle.
+      </p>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="py-16 bg-cream-50">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl md:text-4xl font-bold text-forest-900 display mb-2">2025 by the numbers</h2>
+        <p class="text-forest-700 text-sm">A small rescue with a big year.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-cream-200 text-center">
+          <div class="text-3xl md:text-4xl font-bold text-rust display">312</div>
+          <div class="text-xs text-forest-700/80 mt-1">Pets adopted</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-cream-200 text-center">
+          <div class="text-3xl md:text-4xl font-bold text-rust display">47</div>
+          <div class="text-xs text-forest-700/80 mt-1">Currently in foster</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-cream-200 text-center">
+          <div class="text-3xl md:text-4xl font-bold text-rust display">89</div>
+          <div class="text-xs text-forest-700/80 mt-1">Active foster homes</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-cream-200 text-center">
+          <div class="text-3xl md:text-4xl font-bold text-rust display">$78,400</div>
+          <div class="text-xs text-forest-700/80 mt-1">Vet care this year</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured pets -->
+  <section class="py-16 bg-cream-100">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="mb-10 max-w-2xl">
+        <h2 class="text-3xl md:text-4xl font-bold text-forest-900 display mb-2">Looking for a home</h2>
+        <p class="text-forest-700 text-sm">Three pets currently in our care. Donations cover their vet bills, food, and time to settle in.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&q=80" alt="Bella" class="w-full aspect-square object-cover" />
+          <div class="p-5">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-xl font-bold text-forest-900 display">Bella</h3>
+              <span class="text-[11px] text-forest-700/70">Hound mix · 4 yrs</span>
+            </div>
+            <p class="text-xs text-forest-700/90 mb-3 leading-relaxed">Came in heartworm-positive after her family lost their housing. Calm, leans into every hug.</p>
+            <div class="bg-cream-50 rounded-xl p-2 text-xs">
+              <span class="text-rust font-bold">Sponsor heartworm tx:</span> $250
+            </div>
+          </div>
+        </article>
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&q=80" alt="Otis" class="w-full aspect-square object-cover" />
+          <div class="p-5">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-xl font-bold text-forest-900 display">Otis</h3>
+              <span class="text-[11px] text-forest-700/70">Tabby mix · 9 yrs</span>
+            </div>
+            <p class="text-xs text-forest-700/90 mb-3 leading-relaxed">Surrendered when his owner moved into assisted living. Quiet, sleeps on whatever you're reading.</p>
+            <div class="bg-cream-50 rounded-xl p-2 text-xs">
+              <span class="text-rust font-bold">Senior bloodwork:</span> $180
+            </div>
+          </div>
+        </article>
+        <article class="bg-white rounded-2xl overflow-hidden border border-cream-200">
+          <img src="https://images.unsplash.com/photo-1551717743-49959800b1f6?w=600&q=80" alt="Juno" class="w-full aspect-square object-cover" />
+          <div class="p-5">
+            <div class="flex items-baseline justify-between mb-1">
+              <h3 class="text-xl font-bold text-forest-900 display">Juno</h3>
+              <span class="text-[11px] text-forest-700/70">Shepherd mix · 1 yr</span>
+            </div>
+            <p class="text-xs text-forest-700/90 mb-3 leading-relaxed">Found tied to a fence outside the feed store. Smart, anxious in new places, learning that hands aren't scary.</p>
+            <div class="bg-cream-50 rounded-xl p-2 text-xs">
+              <span class="text-rust font-bold">Training & food:</span> $150
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Donate intro (Zeffy widget lives in Wix below) -->
+  <section class="py-16 bg-white text-center">
+    <div class="max-w-2xl mx-auto px-6">
+      <span class="inline-block bg-rust/10 text-rust px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Donate</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-forest-900 display leading-tight mb-4">Where your money goes.</h2>
+      <p class="text-forest-700 mb-6">
+        We don't take government funding. Every dollar comes from people like you.
+      </p>
+      <ul class="space-y-2 text-forest-700 mb-6 text-left text-sm max-w-md mx-auto">
+        <li class="flex justify-between border-b border-cream-200 pb-1"><span>Vet intake exam</span><span class="font-bold text-rust">$85</span></li>
+        <li class="flex justify-between border-b border-cream-200 pb-1"><span>Spay or neuter</span><span class="font-bold text-rust">$220</span></li>
+        <li class="flex justify-between border-b border-cream-200 pb-1"><span>Heartworm treatment</span><span class="font-bold text-rust">~$600</span></li>
+        <li class="flex justify-between border-b border-cream-200 pb-1"><span>Monthly food, one foster</span><span class="font-bold text-rust">$45</span></li>
+      </ul>
+      <blockquote class="border-l-4 border-rust pl-4 text-forest-700/90 italic text-sm text-left max-w-md mx-auto">
+        "Three years and 22 dogs later, I can tell you exactly where the money goes — it's into the animal sleeping at the foot of my bed tonight."
+        <footer class="not-italic text-xs font-semibold text-forest-900 mt-2">— Sarah K., foster volunteer since 2023</footer>
+      </blockquote>
+      <p class="text-xs text-forest-700/60 mt-8 italic">↓ Donate below ↓</p>
+    </div>
+  </section>
+
+</body>
+</html>
