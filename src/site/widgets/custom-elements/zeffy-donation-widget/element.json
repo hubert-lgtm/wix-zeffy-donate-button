@@ -11,7 +11,7 @@
   },
   "installation": {
     "autoAddToSite": true,
-    "essential": false
+    "essential": true
   },
   "presets": [
     {

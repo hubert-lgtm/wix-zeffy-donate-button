@@ -37,8 +37,15 @@ function toEmbedUrl(url) {
 }
 
 var HOST_STYLE = [
+  // Force the widget host to fill its parent container width. Wix's editor
+  // gives custom elements a fixed default width (600px) that ignores the
+  // surrounding section's actual width — so the donation form ends up
+  // squeezed into a narrow column on wider page layouts. The !important is
+  // required to override Wix's inline `width: Npx` style on the host element.
   ':host {',
   '  display: block;',
+  '  width: 100% !important;',
+  '  max-width: 100% !important;',
   '  box-sizing: border-box;',
   '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;',
   '}',
@@ -140,6 +147,37 @@ class ZeffyDonationWidget extends HTMLElement {
     this._shadow = this.attachShadow({ mode: 'open' });
     this._modalOpen = false;
     this._escHandler = null;
+
+    // Render visible content synchronously in the constructor so Wix's editor
+    // preview shows our widget — not Wix's "element failed to load" placeholder
+    // overlay (the giant exclamation icon). Without this, the editor renders
+    // a fallback graphic in the gap between element creation and the first
+    // connectedCallback → _render() call.
+    try {
+      var styleEl = document.createElement('style');
+      styleEl.textContent = HOST_STYLE;
+      this._shadow.appendChild(styleEl);
+      this._shadow.appendChild(this._buildBootstrapPlaceholder());
+    } catch (e) {
+      // Defensive — never throw from constructor
+    }
+  }
+
+  _buildBootstrapPlaceholder() {
+    // Minimal styled placeholder shown until the first _render() runs. Looks
+    // like a clean "loading" state — never the broken exclamation icon.
+    var box = document.createElement('div');
+    box.className = 'zeffy-state-box onboarding';
+    box.style.minHeight = '120px';
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = 'center';
+    var label = document.createElement('div');
+    label.style.fontSize = '14px';
+    label.style.fontWeight = '600';
+    label.textContent = 'Zeffy donation form';
+    box.appendChild(label);
+    return box;
   }
 
   static get observedAttributes() {
