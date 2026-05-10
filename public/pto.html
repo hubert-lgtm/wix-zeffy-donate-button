@@ -4,9 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lincoln Elementary PTO — Every Lincoln Lion Deserves More</title>
+  <meta name="description" content="The parent-run engine behind the field trips, library books, and classroom supplies that make Lincoln Elementary feel special. 100% of donations go to programs." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,500;9..144,0,700;9..144,1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,186 +18,434 @@
             sans: ['Inter', 'system-ui', 'sans-serif'],
           },
           colors: {
-            navy: { 700: '#1a3a5c', 800: '#13294b', 900: '#0a1d3a' },
-            butter: { 50: '#fdfbf3', 100: '#faf3df', 200: '#f4e6b8' },
-            brick: '#c44536',
+            navy:   { 700: '#1a3a5c', 800: '#13294b', 900: '#0a1d3a' },
+            butter: { 50:  '#fdfbf3', 100:'#faf3df', 200:'#f4e6b8', 300:'#ecd58a' },
+            brick:  '#c44536',
+            brickdark: '#9a3527',
           },
+          boxShadow: {
+            soft: '0 1px 2px rgb(10 29 58 / 0.04), 0 8px 24px rgb(10 29 58 / 0.06)',
+            lift: '0 2px 4px rgb(10 29 58 / 0.06), 0 16px 40px rgb(10 29 58 / 0.10)',
+          },
+          fontVariantNumeric: { tabular: ['tabular-nums'] },
         },
       },
     };
   </script>
-  <!-- Load the actual Zeffy Donation Widget custom element -->
+  <!-- Production Zeffy Donation Widget custom element -->
   <script src="/widget.js"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
-    h1, h2, h3, .display { font-family: 'Fraunces', serif; }
+    h1, h2, h3, .display { font-family: 'Fraunces', serif; font-feature-settings: "ss01"; }
+    .num { font-variant-numeric: tabular-nums; }
+    .lift { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+    .lift:hover { transform: translateY(-2px); }
+    .grain {
+      background-image:
+        radial-gradient(rgba(196,69,54,0.05) 1px, transparent 1px),
+        radial-gradient(rgba(26,58,92,0.04) 1px, transparent 1px);
+      background-size: 24px 24px, 38px 38px;
+      background-position: 0 0, 12px 19px;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: .55; transform: scale(.9); }
+    }
+    .pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+    /* Smooth in-page scroll without overriding the widget iframe */
+    html { scroll-behavior: smooth; }
+    /* Bar widths for "what we fund" mini-charts */
+    .bar { height: 6px; border-radius: 999px; background: rgba(196,69,54,.15); overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #c44536, #d76353); border-radius: 999px; }
   </style>
 </head>
-<body class="bg-butter-50 text-navy-900">
+<body class="bg-butter-50 text-navy-900 antialiased">
 
-  <!-- Top nav -->
-  <header class="bg-white border-b border-butter-200">
+  <!-- Top announcement -->
+  <div class="bg-navy-900 text-butter-100 text-center text-xs md:text-sm py-2 px-4">
+    <span class="font-semibold tracking-wide">Spring drive is live</span>
+    <span class="opacity-70 mx-2">·</span>
+    <span class="opacity-90 num">$6,840 of $12,000 raised so far</span>
+    <a href="#donate" class="underline underline-offset-2 ml-2 hover:opacity-90">Pitch in →</a>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white/85 backdrop-blur border-b border-butter-200 sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-navy-800 text-butter-100 flex items-center justify-center font-bold text-lg">L</div>
+      <a href="/pto.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-navy-800 text-butter-100 flex items-center justify-center font-bold text-lg display">L</div>
         <div>
           <div class="font-bold text-navy-900 leading-tight">Lincoln Elementary</div>
-          <div class="text-xs text-navy-700/70 leading-tight">Parent Teacher Organization</div>
+          <div class="text-[11px] text-navy-700/70 leading-tight uppercase tracking-wider">Parent Teacher Organization</div>
         </div>
-      </div>
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-navy-800">
+      </a>
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-navy-800">
         <a href="#mission" class="hover:text-brick">About</a>
         <a href="#programs" class="hover:text-brick">What we fund</a>
+        <a href="#day" class="hover:text-brick">A day at Lincoln</a>
         <a href="#events" class="hover:text-brick">Events</a>
-        <a href="#donate" class="hover:text-brick">Donate</a>
-        <a href="#donate" class="bg-brick text-white px-4 py-2 rounded-full hover:bg-brick/90">Donate Now</a>
+        <a href="#donate" class="bg-brick text-white px-4 py-2 rounded-full hover:bg-brickdark transition shadow-soft">Donate</a>
       </nav>
     </div>
   </header>
 
-  <!-- Hero -->
-  <section class="relative overflow-hidden">
-    <div class="max-w-6xl mx-auto px-6 pt-20 pb-24 grid md:grid-cols-2 gap-12 items-center">
-      <div>
-        <span class="inline-block bg-butter-200 text-navy-800 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-6">Lincoln PTO · Spring 2026</span>
-        <h1 class="text-5xl md:text-6xl font-bold leading-[1.05] text-navy-900 mb-6 display">Every Lincoln Lion deserves <span class="italic text-brick">more</span>.</h1>
-        <p class="text-lg text-navy-700 mb-8 leading-relaxed">We're parents and teachers raising the funds that turn a good school year into a great one — for every kid, every classroom.</p>
-        <div class="flex flex-wrap gap-3">
-          <a href="#donate" class="bg-brick text-white px-6 py-3 rounded-full font-semibold hover:bg-brick/90">Donate Now</a>
-          <a href="#volunteer" class="bg-white border border-navy-700 text-navy-800 px-6 py-3 rounded-full font-semibold hover:bg-navy-700 hover:text-white transition">Volunteer With Us</a>
+  <!-- HERO -->
+  <section class="relative overflow-hidden grain">
+    <div class="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-butter-200/60 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-brick/10 blur-3xl pointer-events-none"></div>
+
+    <div class="relative max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-20 md:pb-28 grid md:grid-cols-12 gap-10 items-center">
+      <div class="md:col-span-6">
+        <span class="inline-flex items-center gap-2 bg-white border border-butter-200 text-navy-800 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-6 shadow-soft">
+          <span class="w-1.5 h-1.5 bg-brick rounded-full pulse-dot"></span>
+          Lincoln PTO · Spring 2026
+        </span>
+        <h1 class="text-[44px] sm:text-5xl md:text-6xl lg:text-[68px] font-bold leading-[1.02] text-navy-900 mb-6 display tracking-tight">
+          Every Lincoln Lion deserves
+          <span class="italic text-brick">more</span>.
+        </h1>
+        <p class="text-lg md:text-xl text-navy-700 mb-8 leading-relaxed max-w-xl">
+          We're parents and teachers raising the funds that turn a good school year into a great one — for every kid, every classroom, no exceptions.
+        </p>
+        <div class="flex flex-wrap gap-3 mb-10">
+          <a href="#donate" class="bg-brick text-white px-6 py-3.5 rounded-full font-semibold hover:bg-brickdark transition shadow-soft">Donate now</a>
+          <a href="#programs" class="bg-white border border-navy-700/30 text-navy-800 px-6 py-3.5 rounded-full font-semibold hover:border-navy-800 hover:bg-white transition">See where it goes →</a>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-navy-700/70">
+          <div class="flex -space-x-2">
+            <span class="w-7 h-7 rounded-full ring-2 ring-butter-50 bg-[url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80')] bg-cover bg-center"></span>
+            <span class="w-7 h-7 rounded-full ring-2 ring-butter-50 bg-[url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80')] bg-cover bg-center"></span>
+            <span class="w-7 h-7 rounded-full ring-2 ring-butter-50 bg-[url('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80')] bg-cover bg-center"></span>
+            <span class="w-7 h-7 rounded-full ring-2 ring-butter-50 bg-navy-800 text-butter-100 text-[10px] font-bold flex items-center justify-center">+47</span>
+          </div>
+          <span>Joined by <span class="font-semibold text-navy-800 num">214</span> Lincoln families this year</span>
         </div>
       </div>
-      <div class="relative">
-        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&q=80" alt="Elementary classroom" class="rounded-3xl shadow-2xl w-full aspect-[4/5] object-cover" />
-        <div class="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-5 max-w-[220px] border border-butter-200">
-          <div class="text-3xl font-bold text-navy-900 display">$10,000+</div>
-          <div class="text-xs text-navy-700/70 mt-1">Raised by Lincoln families last year</div>
+
+      <!-- Hero visual: photo + 3 floating cards -->
+      <div class="md:col-span-6 relative">
+        <div class="relative">
+          <img
+            src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1100&q=80"
+            alt="Elementary classroom"
+            class="rounded-3xl shadow-lift w-full aspect-[4/5] object-cover" />
+          <!-- Stat card top-right -->
+          <div class="absolute -top-5 -right-3 bg-white rounded-2xl shadow-lift p-4 border border-butter-200 w-[180px]">
+            <div class="text-[11px] uppercase tracking-wider text-navy-700/60 font-semibold mb-1">Raised in 2025</div>
+            <div class="text-3xl font-bold text-navy-900 display num">$10,240</div>
+            <div class="text-[11px] text-navy-700/70 mt-1">across 312 families</div>
+          </div>
+          <!-- Quote card bottom-left -->
+          <div class="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lift p-5 border border-butter-200 max-w-[260px]">
+            <div class="text-xs italic text-navy-700/90 leading-relaxed">"Last year my classroom got a full set of new readers. The kids were stoked."</div>
+            <div class="text-[11px] text-navy-700/70 mt-2 font-semibold">— Mr. Alvarez, 2nd grade</div>
+          </div>
+          <!-- Pill bottom-right -->
+          <div class="absolute bottom-5 right-5 bg-navy-900 text-butter-100 rounded-full px-4 py-2 text-xs font-semibold shadow-lift flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
+            8 donations this week
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust strip -->
+    <div class="relative border-y border-butter-200 bg-white/70">
+      <div class="max-w-6xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-xs md:text-sm text-navy-800 items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-butter-200 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-navy-800" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold leading-tight">501(c)(3) verified</div>
+            <div class="text-navy-700/60 text-[11px] num">EIN 47-2918374</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-butter-200 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-navy-800" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 9h14M5 15h14" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold leading-tight">100% to programs</div>
+            <div class="text-navy-700/60 text-[11px]">Zeffy is free. Zero fees.</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-butter-200 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-navy-800" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold leading-tight">Tax-deductible</div>
+            <div class="text-navy-700/60 text-[11px]">Receipt sent in seconds</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-butter-200 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-navy-800" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold leading-tight">Open books</div>
+            <div class="text-navy-700/60 text-[11px]">Annual report published every June</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Mission -->
-  <section id="mission" class="bg-navy-800 text-butter-100 py-20">
-    <div class="max-w-3xl mx-auto px-6 text-center">
-      <h2 class="text-sm font-semibold uppercase tracking-wider text-butter-200 mb-4">Our mission</h2>
-      <p class="text-2xl md:text-3xl leading-relaxed display">
-        Lincoln PTO is the parent-run engine behind the extras that make school feel special — field trips, library books, classroom supplies, and the teacher appreciation week our staff actually look forward to. We don't run the school. We just make sure no teacher pays for markers out of pocket and no kid gets left off the bus because their family couldn't cover a fee.
+  <!-- MISSION -->
+  <section id="mission" class="bg-navy-900 text-butter-100 py-20 md:py-24 relative overflow-hidden">
+    <div class="absolute -left-32 top-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-brick/15 blur-3xl"></div>
+    <div class="relative max-w-3xl mx-auto px-6 text-center">
+      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-butter-200 mb-5">Our mission</div>
+      <p class="text-2xl md:text-[34px] leading-[1.4] display">
+        Lincoln PTO is the parent-run engine behind the extras that make school feel special — field trips, library books, classroom supplies, and the teacher-appreciation week our staff actually look forward to.
+      </p>
+      <p class="text-butter-100/70 mt-7 max-w-2xl mx-auto leading-relaxed">
+        We don't run the school. We just make sure no teacher pays for markers out of pocket, and no kid gets left off the bus because their family couldn't cover a fee.
       </p>
     </div>
   </section>
 
-  <!-- What we fund -->
-  <section id="programs" class="py-24">
+  <!-- A DAY AT LINCOLN -->
+  <section id="day" class="py-24 bg-butter-50">
     <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-14">
-        <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display mb-3">What we fund</h2>
-        <p class="text-navy-700">Real programs. Real receipts. Last spring's totals.</p>
+      <div class="max-w-2xl mb-12">
+        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-brick mb-3">A day at Lincoln</div>
+        <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display mb-3 leading-[1.05]">Where your dollars actually <span class="italic">show up</span>.</h2>
+        <p class="text-navy-700">A walk through Tuesday — three places PTO money quietly does the work.</p>
       </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div class="bg-white rounded-2xl p-6 border border-butter-200">
-          <div class="text-2xl font-bold text-brick display mb-2">$4,200</div>
-          <div class="font-semibold mb-1">Field trips</div>
-          <p class="text-sm text-navy-700/80">Covered 3 grade-level trips, including the 4th-grade Springfield history day.</p>
+      <div class="grid md:grid-cols-3 gap-5">
+        <article class="bg-white rounded-3xl overflow-hidden border border-butter-200 lift hover:shadow-lift">
+          <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=900&q=80" alt="Library reading nook" class="w-full aspect-[4/3] object-cover" />
+          <div class="p-6">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-brick mb-2">8:45 AM</div>
+            <h3 class="text-2xl font-bold text-navy-900 display mb-2">In the library</h3>
+            <p class="text-sm text-navy-700/85 leading-relaxed">Mrs. Hollander pulls 18 new <em>Wings of Fire</em> titles off the cart. Donated last month. Mateo gets his hands on book six before it hits the shelf.</p>
+            <div class="text-xs text-navy-700/60 mt-4 font-semibold">+180 books in 2025</div>
+          </div>
+        </article>
+        <article class="bg-white rounded-3xl overflow-hidden border border-butter-200 lift hover:shadow-lift">
+          <img src="https://images.unsplash.com/photo-1517842645767-c639042777db?w=900&q=80" alt="Lunch tables" class="w-full aspect-[4/3] object-cover" />
+          <div class="p-6">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-brick mb-2">12:10 PM</div>
+            <h3 class="text-2xl font-bold text-navy-900 display mb-2">In the lunchroom</h3>
+            <p class="text-sm text-navy-700/85 leading-relaxed">Pizza Friday. Three families couldn't cover the $4 ticket — the PTO emergency fund quietly covers it, no forms, no lunch ladies asking questions.</p>
+            <div class="text-xs text-navy-700/60 mt-4 font-semibold">42 quiet covers in 2025</div>
+          </div>
+        </article>
+        <article class="bg-white rounded-3xl overflow-hidden border border-butter-200 lift hover:shadow-lift">
+          <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&q=80" alt="Field trip" class="w-full aspect-[4/3] object-cover" />
+          <div class="p-6">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-brick mb-2">2:30 PM</div>
+            <h3 class="text-2xl font-bold text-navy-900 display mb-2">On the bus</h3>
+            <p class="text-sm text-navy-700/85 leading-relaxed">4th grade rolls out for the Springfield history day. Bus, lunches, museum tickets — all funded so every kid goes, regardless of what's in the field-trip envelope.</p>
+            <div class="text-xs text-navy-700/60 mt-4 font-semibold">3 grade-level trips in 2025</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE FUND (mini bar charts) -->
+  <section id="programs" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-brick mb-3">What we fund</div>
+          <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display leading-[1.05]">Real programs. Real receipts.</h2>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-butter-200">
-          <div class="text-2xl font-bold text-brick display mb-2">$1,800</div>
-          <div class="font-semibold mb-1">Classroom supplies</div>
-          <p class="text-sm text-navy-700/80">Direct $75 stipends to teachers for whatever their classroom needed most.</p>
+        <a href="#" class="text-sm font-semibold text-navy-800 hover:text-brick transition">View 2025 transparency report →</a>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-x-12 gap-y-7 max-w-4xl">
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Field trips</div>
+            <div class="text-brick font-bold display num">$4,200</div>
+          </div>
+          <div class="bar"><i style="width:100%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">3 grade-level trips, including the 4th-grade Springfield history day.</p>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-butter-200">
-          <div class="text-2xl font-bold text-brick display mb-2">$2,500</div>
-          <div class="font-semibold mb-1">Library books</div>
-          <p class="text-sm text-navy-700/80">Added 180 new titles to Mrs. Hollander's shelves, including the full Wings of Fire series.</p>
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Library books</div>
+            <div class="text-brick font-bold display num">$2,500</div>
+          </div>
+          <div class="bar"><i style="width:60%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">180 new titles to Mrs. Hollander's shelves, including the full Wings of Fire series.</p>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-butter-200">
-          <div class="text-2xl font-bold text-brick display mb-2">$900</div>
-          <div class="font-semibold mb-1">Teacher appreciation</div>
-          <p class="text-sm text-navy-700/80">Fed 42 staff members for a full week last May (including the bus drivers).</p>
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Classroom supplies</div>
+            <div class="text-brick font-bold display num">$1,800</div>
+          </div>
+          <div class="bar"><i style="width:43%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">Direct $75 stipends to teachers for whatever their classroom needed most.</p>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-butter-200">
-          <div class="text-2xl font-bold text-brick display mb-2">$600</div>
-          <div class="font-semibold mb-1">Recess equipment</div>
-          <p class="text-sm text-navy-700/80">Replaced the kickballs, jump ropes, and chalk that mysteriously vanish every quarter.</p>
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Teacher appreciation</div>
+            <div class="text-brick font-bold display num">$900</div>
+          </div>
+          <div class="bar"><i style="width:22%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">Fed 42 staff for a full week last May (including the bus drivers).</p>
         </div>
-        <div class="bg-butter-200 rounded-2xl p-6 border border-butter-200 flex flex-col justify-center">
-          <div class="font-bold text-navy-900 mb-2 display text-lg">Want to see the budget?</div>
-          <p class="text-sm text-navy-700/80 mb-3">We publish a full report at the end of every school year. Open books.</p>
-          <a href="#" class="text-brick font-semibold text-sm">View the 2025 report →</a>
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Recess equipment</div>
+            <div class="text-brick font-bold display num">$600</div>
+          </div>
+          <div class="bar"><i style="width:14%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">Replaced the kickballs, jump ropes, and chalk that mysteriously vanish every quarter.</p>
+        </div>
+        <div>
+          <div class="flex items-baseline justify-between mb-2">
+            <div class="font-semibold text-navy-900">Emergency fund</div>
+            <div class="text-brick font-bold display num">$340</div>
+          </div>
+          <div class="bar"><i style="width:8%"></i></div>
+          <p class="text-xs text-navy-700/70 mt-2">42 quiet covers — pizza-night tickets, field-trip fees, a winter coat in February.</p>
+        </div>
+      </div>
+
+      <div class="mt-12 bg-butter-100 border border-butter-200 rounded-3xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="font-bold text-navy-900 display text-lg mb-1">Want the receipts?</div>
+          <p class="text-sm text-navy-700/80 max-w-xl">We publish a full report at the end of every school year. Every line item, every check. Open books.</p>
+        </div>
+        <a href="#" class="bg-white border border-navy-700/30 text-navy-800 px-5 py-2.5 rounded-full font-semibold text-sm hover:border-navy-800 hover:shadow-soft transition whitespace-nowrap">View 2025 report →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRESIDENT'S NOTE -->
+  <section class="py-20 bg-butter-50">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="bg-white rounded-3xl border border-butter-200 p-8 md:p-12 shadow-soft grid md:grid-cols-3 gap-8 items-start">
+        <div class="md:col-span-1">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80" alt="Maya Patel" class="w-32 h-32 rounded-full object-cover shadow-soft" />
+          <div class="mt-4">
+            <div class="font-bold text-navy-900 display text-lg leading-tight">Maya Patel</div>
+            <div class="text-xs text-navy-700/70 uppercase tracking-wider mt-1">PTO President · Mom of two Lions</div>
+          </div>
+        </div>
+        <div class="md:col-span-2 text-navy-700 leading-relaxed">
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-brick mb-3">A note from the PTO</div>
+          <p class="text-lg display text-navy-900 leading-relaxed mb-4">"My kid came home last fall asking why some kids didn't get to go on the field trip."</p>
+          <p class="mb-4">That conversation is why this PTO exists. We're not here to put on fancy galas or shake down working families — we're here to quietly close the gaps no one talks about. A coat. A trip. A book the library couldn't afford. The little things that decide whether school feels like a place a kid wants to be.</p>
+          <p>If you're new to Lincoln, welcome. If you're a returning family, thank you. Either way, we'd love your $25.</p>
+          <div class="mt-5 text-sm font-semibold display italic text-navy-900">— Maya</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Events -->
-  <section id="events" class="py-20 bg-butter-100">
+  <!-- EVENTS -->
+  <section id="events" class="py-24 bg-butter-100">
     <div class="max-w-5xl mx-auto px-6">
-      <div class="text-center mb-12">
-        <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display mb-3">Upcoming events</h2>
-        <p class="text-navy-700">Spring 2026 — come hang out with the lions.</p>
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-brick mb-3">Upcoming events</div>
+          <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display leading-[1.05]">Spring 2026 · come hang.</h2>
+        </div>
+        <a href="#" class="text-sm font-semibold text-navy-800 hover:text-brick transition">Add to your calendar →</a>
       </div>
+
       <div class="space-y-4">
-        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200">
-          <div class="bg-brick text-white rounded-xl text-center px-4 py-3 min-w-[80px]">
-            <div class="text-xs uppercase font-bold">Mar</div>
-            <div class="text-3xl font-bold display">13</div>
+        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200 lift hover:shadow-soft">
+          <div class="bg-brick text-white rounded-2xl text-center px-4 py-3 min-w-[88px]">
+            <div class="text-[10px] uppercase font-bold tracking-wider opacity-80">Mar</div>
+            <div class="text-3xl font-bold display num leading-none">13</div>
+            <div class="text-[10px] mt-1 opacity-80">Fri</div>
           </div>
           <div class="flex-1">
             <div class="font-bold text-lg text-navy-900">Family Pizza Night</div>
             <p class="text-sm text-navy-700/80 mt-1">Pizza, raffle baskets, and a bouncy house in the gym.</p>
-            <div class="text-xs text-navy-700/60 mt-2">Friday, March 13 · 5:30 to 8:00 PM · School gym</div>
+            <div class="text-xs text-navy-700/60 mt-2 num">5:30 — 8:00 PM · School gym · $4 / person</div>
           </div>
+          <div class="text-xs font-semibold text-navy-700 bg-butter-100 border border-butter-200 px-3 py-1.5 rounded-full whitespace-nowrap">192 going</div>
         </div>
-        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200">
-          <div class="bg-brick text-white rounded-xl text-center px-4 py-3 min-w-[80px]">
-            <div class="text-xs uppercase font-bold">Apr</div>
-            <div class="text-3xl font-bold display">18</div>
+        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200 lift hover:shadow-soft">
+          <div class="bg-brick text-white rounded-2xl text-center px-4 py-3 min-w-[88px]">
+            <div class="text-[10px] uppercase font-bold tracking-wider opacity-80">Apr</div>
+            <div class="text-3xl font-bold display num leading-none">18</div>
+            <div class="text-[10px] mt-1 opacity-80">Sat</div>
           </div>
           <div class="flex-1">
             <div class="font-bold text-lg text-navy-900">Lincoln 5K Fun Run</div>
             <p class="text-sm text-navy-700/80 mt-1">Kids, parents, and one very competitive 2nd-grade teacher. Strollers welcome.</p>
-            <div class="text-xs text-navy-700/60 mt-2">Saturday, April 18 · 9:00 AM · School track</div>
+            <div class="text-xs text-navy-700/60 mt-2 num">9:00 AM · School track · $20 / family</div>
           </div>
+          <div class="text-xs font-semibold text-navy-700 bg-butter-100 border border-butter-200 px-3 py-1.5 rounded-full whitespace-nowrap">87 signed up</div>
         </div>
-        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200">
-          <div class="bg-brick text-white rounded-xl text-center px-4 py-3 min-w-[80px]">
-            <div class="text-xs uppercase font-bold">May</div>
-            <div class="text-3xl font-bold display">9</div>
+        <div class="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start border border-butter-200 lift hover:shadow-soft">
+          <div class="bg-brick text-white rounded-2xl text-center px-4 py-3 min-w-[88px]">
+            <div class="text-[10px] uppercase font-bold tracking-wider opacity-80">May</div>
+            <div class="text-3xl font-bold display num leading-none">9</div>
+            <div class="text-[10px] mt-1 opacity-80">Sat</div>
           </div>
           <div class="flex-1">
             <div class="font-bold text-lg text-navy-900">Spring Plant Sale</div>
             <p class="text-sm text-navy-700/80 mt-1">Tomato starts, marigolds, and herbs grown by the 5th graders. Sells out every year.</p>
-            <div class="text-xs text-navy-700/60 mt-2">Saturday, May 9 · 8:00 AM to 1:00 PM · Front lawn</div>
+            <div class="text-xs text-navy-700/60 mt-2 num">8:00 AM — 1:00 PM · Front lawn</div>
           </div>
+          <div class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full whitespace-nowrap">Volunteers needed</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Donate (with Zeffy widget!) -->
+  <!-- DONATE -->
   <section id="donate" class="py-24 bg-white">
-    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-5 gap-12">
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-5 gap-10 lg:gap-16">
+      <!-- Left column: pitch -->
       <div class="lg:col-span-2">
-        <span class="inline-block bg-brick/10 text-brick px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-5">Donate</span>
-        <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display leading-[1.1] mb-6">Show up for a kid you'll never meet.</h2>
+        <span class="inline-block bg-brick/10 text-brick px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.18em] mb-5">Donate</span>
+        <h2 class="text-4xl md:text-5xl font-bold text-navy-900 display leading-[1.05] mb-6">Show up for a kid you'll never meet.</h2>
         <p class="text-lg text-navy-700 leading-relaxed mb-6">
-          Most of our budget comes from $20 and $50 donations from families like yours. That's it. No grants, no district money — just parents chipping in. <strong class="text-navy-900">100% of donations go directly to classroom and student programs</strong> (Zeffy is free for us, so nothing gets eaten up in fees).
+          Most of our budget comes from $20 and $50 donations from families like yours. No grants, no district money — just parents chipping in.
+          <strong class="text-navy-900">100% of donations go directly to classroom and student programs</strong> (Zeffy is free for us, so nothing gets eaten in fees).
         </p>
-        <ul class="space-y-2 text-navy-700 mb-8">
-          <li class="flex gap-3"><span class="text-brick font-bold">$25</span> buys a class set of new pencils</li>
-          <li class="flex gap-3"><span class="text-brick font-bold">$50</span> covers a kid's pizza-night ticket whose family can't swing it</li>
-          <li class="flex gap-3"><span class="text-brick font-bold">$100</span> sends a kid on a field trip</li>
-        </ul>
-        <blockquote class="border-l-4 border-brick pl-5 text-navy-700/90 italic">
+
+        <!-- Impact picker (visual chips, click jumps focus to widget) -->
+        <div class="mb-7">
+          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-navy-700/60 mb-3">Pick your impact</div>
+          <div class="grid grid-cols-3 gap-2">
+            <a href="#donate-form" class="text-center px-3 py-3 rounded-2xl border border-butter-200 hover:border-brick hover:shadow-soft bg-butter-50 lift">
+              <div class="font-bold text-navy-900 display text-xl num">$25</div>
+              <div class="text-[11px] text-navy-700/70 mt-1 leading-snug">a class set of pencils</div>
+            </a>
+            <a href="#donate-form" class="text-center px-3 py-3 rounded-2xl border border-butter-200 hover:border-brick hover:shadow-soft bg-butter-50 lift">
+              <div class="font-bold text-navy-900 display text-xl num">$50</div>
+              <div class="text-[11px] text-navy-700/70 mt-1 leading-snug">a kid's pizza-night ticket</div>
+            </a>
+            <a href="#donate-form" class="text-center px-3 py-3 rounded-2xl border-2 border-brick bg-brick/5 hover:shadow-soft lift relative">
+              <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-brick text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Most-loved</div>
+              <div class="font-bold text-navy-900 display text-xl num">$100</div>
+              <div class="text-[11px] text-navy-700/70 mt-1 leading-snug">sends a kid on a field trip</div>
+            </a>
+          </div>
+        </div>
+
+        <blockquote class="border-l-4 border-brick pl-5 text-navy-700/90 italic leading-relaxed">
           "I used to spend $400 a year of my own money on supplies. Last year, because of the PTO, I spent zero. That's not a small thing — that's a full week of groceries for my family."
           <footer class="not-italic text-sm font-semibold text-navy-900 mt-3">— Mrs. Patel, 3rd grade teacher</footer>
         </blockquote>
       </div>
 
+      <!-- Right column: widget -->
       <div class="lg:col-span-3">
-        <div class="bg-butter-50 border border-butter-200 rounded-3xl p-6">
-          <div class="text-xs uppercase tracking-wider font-bold text-brick mb-2">Donate via Zeffy</div>
-          <div class="text-sm text-navy-700/80 mb-4">100% of your gift goes to Lincoln PTO. Zeffy charges no fees.</div>
+        <div id="donate-form" class="bg-butter-50 border border-butter-200 rounded-3xl p-5 md:p-6 shadow-soft">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <div class="text-xs uppercase tracking-[0.18em] font-bold text-brick">Donate via Zeffy</div>
+              <div class="text-sm text-navy-700/80 mt-1">100% goes to Lincoln PTO. Zeffy charges no fees.</div>
+            </div>
+            <div class="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+              Live · 8 gifts this week
+            </div>
+          </div>
           <!-- The actual widget — same one running in the Wix app -->
           <zeffy-donation-widget
             display-mode="inline"
@@ -204,19 +453,77 @@
             embed-width="100"
             embed-width-unit="%"
             embed-height="700"></zeffy-donation-widget>
+          <div class="text-[11px] text-navy-700/60 mt-3 text-center">
+            Powered by <a href="https://www.zeffy.com" class="font-semibold underline-offset-2 hover:underline">Zeffy</a> · Tax receipt sent immediately
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-navy-900 text-butter-100/70 py-10 text-sm">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-4">
-      <div>
-        <div class="font-bold text-butter-100 mb-1">Lincoln Elementary PTO</div>
-        <div>1247 Maple Avenue · Lincoln, IL 61727</div>
+  <!-- DONOR WALL -->
+  <section class="py-16 bg-butter-50 border-t border-butter-200">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-brick mb-3">With thanks to</div>
+      <h2 class="text-2xl md:text-3xl font-bold display text-navy-900 mb-6">Lincoln families who chipped in this season</h2>
+      <p class="text-sm text-navy-700/80 max-w-md mx-auto mb-6">A few of the 214 names. Donations are anonymous unless donors opt in.</p>
+      <div class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-navy-800/85">
+        <span>The Aldana family</span><span class="text-butter-300">·</span>
+        <span>The Booker family</span><span class="text-butter-300">·</span>
+        <span>Carrie & Tom Choi</span><span class="text-butter-300">·</span>
+        <span>The Dvorak-Lin family</span><span class="text-butter-300">·</span>
+        <span>The Espinoza family</span><span class="text-butter-300">·</span>
+        <span>Mrs. Hollander</span><span class="text-butter-300">·</span>
+        <span>The Iwasaki family</span><span class="text-butter-300">·</span>
+        <span>Pat &amp; Sam Jensen</span><span class="text-butter-300">·</span>
+        <span>The Khoury family</span><span class="text-butter-300">·</span>
+        <span>Lila &amp; Marc Lévesque</span><span class="text-butter-300">·</span>
+        <span>The McAllister family</span><span class="text-butter-300">·</span>
+        <span>The Nakagawa family</span><span class="text-butter-300">·</span>
+        <span>The O'Brien family</span><span class="text-butter-300">·</span>
+        <span>The Patel family</span><span class="text-butter-300">·</span>
+        <span>The Quintero family</span><span class="text-butter-300">·</span>
+        <span>The Rashid family</span><span class="text-butter-300">·</span>
+        <span>...and 198 more.</span>
       </div>
-      <div class="text-butter-100/50">A 501(c)(3) nonprofit. EIN 47-XXXXXXX.</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-navy-900 text-butter-100/80 py-14 text-sm">
+    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-10">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-butter-100 text-navy-900 flex items-center justify-center font-bold text-lg display">L</div>
+          <div>
+            <div class="font-bold text-butter-100 leading-tight">Lincoln Elementary PTO</div>
+            <div class="text-[11px] text-butter-100/60 leading-tight uppercase tracking-wider">501(c)(3) Nonprofit</div>
+          </div>
+        </div>
+        <p class="text-butter-100/70 leading-relaxed max-w-md">Parent-run, teacher-supported, kid-focused. Showing up for Lincoln Lions since 2009.</p>
+        <p class="text-[11px] text-butter-100/50 mt-4 num">EIN 47-2918374 · Last 990 filed Oct 2025</p>
+      </div>
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-butter-100 mb-3">Visit</div>
+        <p class="text-butter-100/70 leading-relaxed">1247 Maple Avenue<br/>Lincoln, IL 61727</p>
+        <p class="text-butter-100/70 mt-3 num">(217) 555-0192</p>
+      </div>
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-butter-100 mb-3">Stay in the loop</div>
+        <p class="text-butter-100/70 mb-3 leading-relaxed">One short email a month. Events + fund updates.</p>
+        <form onsubmit="event.preventDefault(); this.querySelector('button').textContent='Thanks!'" class="flex gap-2">
+          <input type="email" required placeholder="parent@lincoln.edu" class="flex-1 bg-navy-800 border border-navy-700 rounded-full px-3 py-2 text-butter-100 placeholder-butter-100/40 focus:outline-none focus:border-butter-200 text-xs" />
+          <button class="bg-brick text-white rounded-full px-4 py-2 font-semibold text-xs hover:bg-brickdark transition">Sign up</button>
+        </form>
+      </div>
+    </div>
+    <div class="max-w-6xl mx-auto px-6 mt-12 pt-6 border-t border-navy-800 flex flex-col md:flex-row justify-between gap-3 text-[11px] text-butter-100/50">
+      <div>© 2026 Lincoln Elementary PTO. All donations tax-deductible.</div>
+      <div class="flex gap-5">
+        <a href="#" class="hover:text-butter-100">Privacy</a>
+        <a href="#" class="hover:text-butter-100">Bylaws</a>
+        <a href="#" class="hover:text-butter-100">Annual report</a>
+      </div>
     </div>
   </footer>
 
