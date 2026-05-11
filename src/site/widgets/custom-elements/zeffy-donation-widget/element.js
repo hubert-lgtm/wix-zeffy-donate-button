@@ -93,6 +93,22 @@ var HOST_STYLE = [
   '  box-shadow: 0 2px 10px rgba(0,0,0,0.25);',
   '}',
   '.zeffy-modal-close:hover { background: #f5f5f5; }',
+  '.zeffy-modal-newtab {',
+  '  position: absolute;',
+  '  top: 14px;',
+  '  left: 14px;',
+  '  z-index: 100000;',
+  '  font-size: 11px;',
+  '  color: #555;',
+  '  text-decoration: none;',
+  '  background: rgba(255,255,255,0.92);',
+  '  padding: 4px 10px;',
+  '  border-radius: 20px;',
+  '  box-shadow: 0 1px 4px rgba(0,0,0,0.15);',
+  '  line-height: 1.5;',
+  '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;',
+  '}',
+  '.zeffy-modal-newtab:hover { color: #000; text-decoration: underline; }',
   '.zeffy-modal-iframe {',
   '  display: block;',
   '  width: 100%;',
@@ -284,31 +300,24 @@ class ZeffyDonationWidget extends HTMLElement {
   _buildButton(embedUrl, formUrl, styleProps) {
     var self    = this;
     var wrapper = document.createElement('div');
-    var baseStyle = this._computeButtonStyle(styleProps);
-
+    var btn     = document.createElement('button');
+    btn.style.cssText = this._computeButtonStyle(styleProps);
+    btn.textContent   = styleProps.btnText || 'Donate Now';
+    btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
+    btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
     if (styleProps.btnAction === 'new-tab') {
-      var a = document.createElement('a');
-      a.href        = formUrl;
-      a.target      = '_blank';
-      a.rel         = 'noopener noreferrer';
-      a.style.cssText = baseStyle + '; display: inline-block; text-decoration: none;';
-      a.textContent = styleProps.btnText || 'Donate Now';
-      a.addEventListener('mouseover', function () { a.style.opacity = '0.85'; });
-      a.addEventListener('mouseout',  function () { a.style.opacity = '1'; });
-      wrapper.appendChild(a);
+      // Use window.open() — more reliable than <a target="_blank"> inside a sandboxed iframe.
+      btn.addEventListener('click', function () {
+        window.open(formUrl, '_blank', 'noopener,noreferrer');
+      });
     } else {
-      var btn = document.createElement('button');
-      btn.style.cssText = baseStyle;
-      btn.textContent   = styleProps.btnText || 'Donate Now';
-      btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
-      btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
-      btn.addEventListener('click',     function () { self._openModal(embedUrl); });
-      wrapper.appendChild(btn);
+      btn.addEventListener('click', function () { self._openModal(embedUrl, formUrl); });
     }
+    wrapper.appendChild(btn);
     return wrapper;
   }
 
-  _openModal(embedUrl) {
+  _openModal(embedUrl, formUrl) {
     var self   = this;
     var shadow = this._shadow;
 
@@ -326,6 +335,15 @@ class ZeffyDonationWidget extends HTMLElement {
     closeBtn.textContent = '×';
     closeBtn.setAttribute('aria-label', 'Close donation form');
 
+    // Fallback link shown in top-left — lets users open the form in a new tab
+    // if the iframe is blocked (e.g. in Wix editor preview).
+    var newTabLink = document.createElement('a');
+    newTabLink.className   = 'zeffy-modal-newtab';
+    newTabLink.href        = formUrl;
+    newTabLink.target      = '_blank';
+    newTabLink.rel         = 'noopener noreferrer';
+    newTabLink.textContent = 'Open in new tab ↗';
+
     var iframe = document.createElement('iframe');
     iframe.className = 'zeffy-modal-iframe';
     iframe.src = embedUrl;
@@ -335,6 +353,7 @@ class ZeffyDonationWidget extends HTMLElement {
     iframe.setAttribute('frameborder', '0');
 
     box.appendChild(closeBtn);
+    box.appendChild(newTabLink);
     box.appendChild(iframe);
     overlay.appendChild(box);
     shadow.appendChild(overlay);
