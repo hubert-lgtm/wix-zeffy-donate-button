@@ -1,20 +1,16 @@
 /**
  * Zeffy Donation Widget — Custom Element
  *
- * Exported as a default class so the Wix CLI script-asset wrapper can
- * inject accessTokenListener and call customElements.define itself.
- * Do NOT call customElements.define here.
+ * User pastes a Zeffy donation form URL in the settings panel.
+ * The widget renders a styled button; clicking it opens the form
+ * in a modal overlay.
  *
- * Observed attributes (kebab-case, set by panel via widget.setProp):
- *   display-mode              "button" | "inline"
+ * Observed attributes (kebab-case, set via widget.setProp):
  *   form-url                  Full zeffy.com donation-form URL
- *   embed-width               number (string-encoded)
- *   embed-width-unit          "%" | "px"
- *   embed-height              number (string-encoded)
- *   button-text               string
+ *   button-text               Label text
  *   button-bg-color           CSS color
  *   button-text-color         CSS color
- *   button-theme              preset id string
+ *   button-theme              Preset id (or '' for custom)
  *   button-border-radius      px (string-encoded)
  *   button-shadow             "none" | "sm" | "md" | "lg"
  *   button-border-width       px (string-encoded)
@@ -25,15 +21,10 @@
  *   button-width-px           px, 0 = auto (string-encoded)
  *   button-padding-x          px (string-encoded)
  *   button-padding-y          px (string-encoded)
- *
- * Inline embed: srcdoc iframe inside shadow DOM. The srcdoc hosts a
- * data-zeffy-embed div + zeffy-embed.js with a <base href> so relative
- * Zeffy URLs resolve correctly. Identical pattern to the Wix HTML block.
  */
 
-var DEMO_URL = 'https://www.zeffy.com/en-US/donation-form/zeffy-demo-donation-form';
+var DEMO_URL     = 'https://www.zeffy.com/en-US/donation-form/zeffy-demo-donation-form';
 var ZEFFY_SIGNUP = 'https://www.zeffy.com/register';
-var ZEFFY_EMBED_SCRIPT = 'https://www.zeffy.com/embed/v2/zeffy-embed.js';
 
 var SHADOW_VALUES = {
   'none': '',
@@ -51,11 +42,6 @@ function isValidZeffyUrl(url) {
 function toEmbedSlug(url) {
   var match = url.match(/\/donation-form\/([^/?#]+)/);
   return match ? match[1] : null;
-}
-
-function toEmbedUrl(url) {
-  var slug = toEmbedSlug(url);
-  return slug ? 'https://www.zeffy.com/embed/donation-form/' + slug : null;
 }
 
 var HOST_STYLE = [
@@ -137,13 +123,12 @@ class ZeffyDonationWidget extends HTMLElement {
 
   constructor() {
     super();
-    this._shadow = this.attachShadow({ mode: 'open' });
-    this._modalOpen = false;
+    this._shadow     = this.attachShadow({ mode: 'open' });
+    this._modalOpen  = false;
     this._escHandler = null;
 
-    // Render a bootstrap placeholder synchronously so the Wix editor never
-    // shows the "element failed to load" exclamation icon in the gap before
-    // connectedCallback fires.
+    // Bootstrap placeholder prevents the Wix editor "failed to load" icon
+    // during the gap between constructor and connectedCallback.
     try {
       var styleEl = document.createElement('style');
       styleEl.textContent = HOST_STYLE;
@@ -155,13 +140,9 @@ class ZeffyDonationWidget extends HTMLElement {
   _buildBootstrapPlaceholder() {
     var box = document.createElement('div');
     box.className = 'zeffy-state-box onboarding';
-    box.style.minHeight = '120px';
-    box.style.display = 'flex';
-    box.style.alignItems = 'center';
-    box.style.justifyContent = 'center';
+    box.style.cssText = 'min-height:120px;display:flex;align-items:center;justify-content:center;';
     var label = document.createElement('div');
-    label.style.fontSize = '14px';
-    label.style.fontWeight = '600';
+    label.style.cssText = 'font-size:14px;font-weight:600;';
     label.textContent = 'Zeffy donation form';
     box.appendChild(label);
     return box;
@@ -169,11 +150,7 @@ class ZeffyDonationWidget extends HTMLElement {
 
   static get observedAttributes() {
     return [
-      'display-mode',
       'form-url',
-      'embed-width',
-      'embed-width-unit',
-      'embed-height',
       'button-text',
       'button-bg-color',
       'button-text-color',
@@ -191,104 +168,65 @@ class ZeffyDonationWidget extends HTMLElement {
     ];
   }
 
-  connectedCallback() {
-    this._render();
-  }
-
-  attributeChangedCallback() {
-    this._render();
-  }
+  connectedCallback()        { this._render(); }
+  attributeChangedCallback() { this._render(); }
 
   _prop(name, fallback) {
     var v = this.getAttribute(name);
     return (v !== null && v !== '') ? v : fallback;
   }
 
-  _propNum(name, fallback) {
-    var v = parseFloat(this.getAttribute(name));
-    return isNaN(v) ? fallback : v;
-  }
-
   _render() {
-    var mode           = this._prop('display-mode', 'button');
-    var formUrl        = this._prop('form-url', '');
-    var height         = this._propNum('embed-height', 700);
-    var btnText        = this._prop('button-text', 'Donate Now');
-    var btnBg          = this._prop('button-bg-color', '#219653');
-    var btnColor       = this._prop('button-text-color', '#ffffff');
-    var btnRadius      = this._prop('button-border-radius', '6');
-    var btnShadow      = this._prop('button-shadow', 'none');
-    var btnBorderWidth = this._prop('button-border-width', '0');
-    var btnBorderColor = this._prop('button-border-color', '#219653');
-    var btnGradEnabled = this._prop('button-gradient-enabled', 'false');
+    var formUrl        = this._prop('form-url',               '');
+    var btnText        = this._prop('button-text',            'Donate Now');
+    var btnBg          = this._prop('button-bg-color',        '#219653');
+    var btnColor       = this._prop('button-text-color',      '#ffffff');
+    var btnRadius      = this._prop('button-border-radius',   '6');
+    var btnShadow      = this._prop('button-shadow',          'none');
+    var btnBorderWidth = this._prop('button-border-width',    '0');
+    var btnBorderColor = this._prop('button-border-color',    '#219653');
+    var btnGradEnabled = this._prop('button-gradient-enabled','false');
     var btnGrad2       = this._prop('button-gradient-color2', '#005BBB');
-    var btnFontSize    = this._prop('button-font-size', '16');
-    var btnWidthPx     = this._prop('button-width-px', '0');
-    var btnPaddingX    = this._prop('button-padding-x', '32');
-    var btnPaddingY    = this._prop('button-padding-y', '12');
+    var btnFontSize    = this._prop('button-font-size',       '16');
+    var btnWidthPx     = this._prop('button-width-px',        '0');
+    var btnPaddingX    = this._prop('button-padding-x',       '32');
+    var btnPaddingY    = this._prop('button-padding-y',       '12');
 
     var styleProps = {
-      btnText: btnText,
-      btnBg: btnBg,
-      btnColor: btnColor,
-      btnRadius: btnRadius,
-      btnShadow: btnShadow,
-      btnBorderWidth: btnBorderWidth,
-      btnBorderColor: btnBorderColor,
-      btnGradEnabled: btnGradEnabled,
-      btnGrad2: btnGrad2,
-      btnFontSize: btnFontSize,
-      btnWidthPx: btnWidthPx,
-      btnPaddingX: btnPaddingX,
-      btnPaddingY: btnPaddingY,
+      btnText: btnText, btnBg: btnBg, btnColor: btnColor,
+      btnRadius: btnRadius, btnShadow: btnShadow,
+      btnBorderWidth: btnBorderWidth, btnBorderColor: btnBorderColor,
+      btnGradEnabled: btnGradEnabled, btnGrad2: btnGrad2,
+      btnFontSize: btnFontSize, btnWidthPx: btnWidthPx,
+      btnPaddingX: btnPaddingX, btnPaddingY: btnPaddingY,
     };
 
-    this.style.minHeight = (mode === 'button') ? '40px' : '200px';
+    this.style.minHeight = '40px';
 
-    var slug = null;
     var embedUrl = null;
-    var state = 'ok';
+    var state    = 'ok';
 
-    if (!formUrl || formUrl === '') {
+    if (!formUrl) {
       state = 'onboarding';
     } else if (formUrl === DEMO_URL || isValidZeffyUrl(formUrl)) {
-      slug = toEmbedSlug(formUrl);
+      var slug = toEmbedSlug(formUrl);
       embedUrl = slug ? 'https://www.zeffy.com/embed/donation-form/' + slug : null;
-      if (!embedUrl) {
-        state = 'error';
-      } else {
-        state = (formUrl === DEMO_URL) ? 'demo' : 'ok';
-      }
+      state    = embedUrl ? ((formUrl === DEMO_URL) ? 'demo' : 'ok') : 'error';
     } else {
       state = 'error';
     }
 
     var shadow = this._shadow;
     while (shadow.firstChild) shadow.removeChild(shadow.firstChild);
-
     var styleEl = document.createElement('style');
     styleEl.textContent = HOST_STYLE;
     shadow.appendChild(styleEl);
 
-    if (state === 'onboarding') {
-      shadow.appendChild(this._buildOnboarding(mode, styleProps));
-      return;
-    }
-
-    if (state === 'error') {
-      shadow.appendChild(this._buildError(formUrl));
-      return;
-    }
-
-    // state === 'ok' or 'demo'
-    if (mode === 'button') {
-      shadow.appendChild(this._buildButton(embedUrl, styleProps));
-    } else {
-      shadow.appendChild(this._buildInlineSrcdoc(slug, height));
-    }
+    if (state === 'onboarding') { shadow.appendChild(this._buildOnboarding(styleProps)); return; }
+    if (state === 'error')      { shadow.appendChild(this._buildError(formUrl));          return; }
+    shadow.appendChild(this._buildButton(embedUrl, styleProps));
   }
 
-  // Returns the cssText string for a button given the current styling props.
   _computeButtonStyle(styleProps) {
     var bg          = styleProps.btnBg || '#219653';
     var text        = styleProps.btnColor || '#ffffff';
@@ -311,14 +249,10 @@ class ZeffyDonationWidget extends HTMLElement {
     }
     parts.push('color: ' + text);
     parts.push('border-radius: ' + radius + 'px');
-    if (borderWidth > 0) {
-      parts.push('border: ' + borderWidth + 'px solid ' + borderColor);
-    } else {
-      parts.push('border: none');
-    }
-    if (shadowVal) {
-      parts.push('box-shadow: ' + shadowVal);
-    }
+    parts.push(borderWidth > 0
+      ? 'border: ' + borderWidth + 'px solid ' + borderColor
+      : 'border: none');
+    if (shadowVal) parts.push('box-shadow: ' + shadowVal);
     parts.push('font-size: ' + fontSize + 'px');
     parts.push('font-weight: 600');
     parts.push('font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif');
@@ -331,40 +265,20 @@ class ZeffyDonationWidget extends HTMLElement {
   }
 
   _buildButton(embedUrl, styleProps) {
-    var self = this;
+    var self    = this;
     var wrapper = document.createElement('div');
-
-    var btn = document.createElement('button');
+    var btn     = document.createElement('button');
     btn.style.cssText = this._computeButtonStyle(styleProps);
-    btn.textContent = styleProps.btnText || 'Donate Now';
-
+    btn.textContent   = styleProps.btnText || 'Donate Now';
     btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
     btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
-    btn.addEventListener('click', function () { self._openModal(embedUrl); });
-
+    btn.addEventListener('click',     function () { self._openModal(embedUrl); });
     wrapper.appendChild(btn);
     return wrapper;
   }
 
-  _buildInlineSrcdoc(slug, height) {
-    var iframe = document.createElement('iframe');
-    iframe.style.cssText = 'display:block;width:100%;border:none;';
-    iframe.style.height = height + 'px';
-    iframe.setAttribute('allow', 'payment');
-    iframe.setAttribute('allowpaymentrequest', '');
-    var embedPath = '/embed/donation-form/' + slug;
-    iframe.srcdoc = '<!DOCTYPE html><html><head>'
-      + '<base href="https://www.zeffy.com">'
-      + '<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden}</style>'
-      + '</head><body>'
-      + '<div data-zeffy-embed data-form-url="' + embedPath + '"></div>'
-      + '<script src="https://www.zeffy.com/embed/v2/zeffy-embed.js"><\/script>'
-      + '</body></html>';
-    return iframe;
-  }
-
   _openModal(embedUrl) {
-    var self = this;
+    var self   = this;
     var shadow = this._shadow;
 
     var overlay = document.createElement('div');
@@ -394,7 +308,6 @@ class ZeffyDonationWidget extends HTMLElement {
     overlay.appendChild(box);
     shadow.appendChild(overlay);
     this._modalOpen = true;
-
     document.body.style.overflow = 'hidden';
 
     function close() {
@@ -406,42 +319,37 @@ class ZeffyDonationWidget extends HTMLElement {
     }
 
     closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) close();
-    });
-
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
     this._escHandler = function (e) { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', this._escHandler);
   }
 
-  _buildOnboarding(mode, styleProps) {
+  _buildOnboarding(styleProps) {
     var box = document.createElement('div');
     box.className = 'zeffy-state-box onboarding';
 
-    if (mode === 'button') {
-      var preview = document.createElement('div');
-      preview.style.cssText = 'margin-bottom:16px;';
-      var previewBtn = document.createElement('button');
-      previewBtn.style.cssText = this._computeButtonStyle(styleProps);
-      previewBtn.style.pointerEvents = 'none';
-      previewBtn.textContent = styleProps.btnText || 'Donate Now';
-      preview.appendChild(previewBtn);
-      box.appendChild(preview);
-    }
+    var preview    = document.createElement('div');
+    preview.style.cssText = 'margin-bottom:16px;';
+    var previewBtn = document.createElement('button');
+    previewBtn.style.cssText    = this._computeButtonStyle(styleProps);
+    previewBtn.style.pointerEvents = 'none';
+    previewBtn.textContent      = styleProps.btnText || 'Donate Now';
+    preview.appendChild(previewBtn);
+    box.appendChild(preview);
 
     var title = document.createElement('p');
     title.style.cssText = 'font-size:16px;font-weight:600;margin:0 0 8px;';
-    title.textContent = 'New to Zeffy?';
+    title.textContent   = 'New to Zeffy?';
 
     var sub = document.createElement('p');
     sub.style.cssText = 'font-size:14px;margin:0 0 12px;';
-    sub.textContent = 'Create a free account and donation form, then paste your form URL in the settings panel.';
+    sub.textContent   = 'Create a free account and donation form, then paste your form URL in the settings panel.';
 
     var link = document.createElement('a');
-    link.href = ZEFFY_SIGNUP;
+    link.href        = ZEFFY_SIGNUP;
     link.textContent = 'Sign up for free at Zeffy.com';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    link.target      = '_blank';
+    link.rel         = 'noopener noreferrer';
 
     box.appendChild(title);
     box.appendChild(sub);
@@ -455,19 +363,19 @@ class ZeffyDonationWidget extends HTMLElement {
 
     var title = document.createElement('p');
     title.style.cssText = 'font-size:15px;font-weight:600;margin:0 0 8px;';
-    title.textContent = 'Invalid Zeffy URL';
+    title.textContent   = 'Invalid Zeffy URL';
 
     var sub = document.createElement('p');
     sub.style.cssText = 'font-size:13px;margin:0 0 10px;';
-    sub.textContent = 'The URL must be a Zeffy donation form link, e.g.:';
+    sub.textContent   = 'The URL must be a Zeffy donation form link, e.g.:';
 
     var example = document.createElement('code');
     example.style.cssText = 'display:block;font-size:12px;word-break:break-all;background:#ffeaea;padding:6px 10px;border-radius:4px;margin-bottom:10px;';
-    example.textContent = 'https://www.zeffy.com/en-US/donation-form/your-form-slug';
+    example.textContent   = 'https://www.zeffy.com/en-US/donation-form/your-form-slug';
 
     var note = document.createElement('p');
     note.style.cssText = 'font-size:12px;margin:0;color:#a00;';
-    note.textContent = 'You entered: ' + (attemptedUrl || '(empty)');
+    note.textContent   = 'You entered: ' + (attemptedUrl || '(empty)');
 
     box.appendChild(title);
     box.appendChild(sub);
