@@ -26,10 +26,9 @@
  *   button-padding-x          px (string-encoded)
  *   button-padding-y          px (string-encoded)
  *
- * Inline embed: uses Zeffy's own zeffy-embed.js + light DOM so the script
- * can find the [data-zeffy-embed] element (shadow DOM is not pierced by
- * document.querySelectorAll). A direct iframe fallback is shown if the
- * script fails to load.
+ * Inline embed: srcdoc iframe inside shadow DOM. The srcdoc hosts a
+ * data-zeffy-embed div + zeffy-embed.js with a <base href> so relative
+ * Zeffy URLs resolve correctly. Identical pattern to the Wix HTML block.
  */
 
 var DEMO_URL = 'https://www.zeffy.com/en-US/donation-form/zeffy-demo-donation-form';
@@ -141,8 +140,6 @@ class ZeffyDonationWidget extends HTMLElement {
     this._shadow = this.attachShadow({ mode: 'open' });
     this._modalOpen = false;
     this._escHandler = null;
-    this._lightEmbed = null;
-    this._connected = false;
 
     // Render a bootstrap placeholder synchronously so the Wix editor never
     // shows the "element failed to load" exclamation icon in the gap before
@@ -195,13 +192,7 @@ class ZeffyDonationWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    this._connected = true;
     this._render();
-  }
-
-  disconnectedCallback() {
-    this._connected = false;
-    this._clearLightEmbed();
   }
 
   attributeChangedCallback() {
@@ -216,13 +207,6 @@ class ZeffyDonationWidget extends HTMLElement {
   _propNum(name, fallback) {
     var v = parseFloat(this.getAttribute(name));
     return isNaN(v) ? fallback : v;
-  }
-
-  _clearLightEmbed() {
-    if (this._lightEmbed && this._lightEmbed.parentNode) {
-      this._lightEmbed.parentNode.removeChild(this._lightEmbed);
-    }
-    this._lightEmbed = null;
   }
 
   _render() {
@@ -258,9 +242,6 @@ class ZeffyDonationWidget extends HTMLElement {
       btnPaddingX: btnPaddingX,
       btnPaddingY: btnPaddingY,
     };
-
-    // Always clean up any light DOM embed from the previous render first.
-    this._clearLightEmbed();
 
     this.style.minHeight = (mode === 'button') ? '40px' : '200px';
 
@@ -303,11 +284,7 @@ class ZeffyDonationWidget extends HTMLElement {
     if (mode === 'button') {
       shadow.appendChild(this._buildButton(embedUrl, styleProps));
     } else {
-      // Inline: use light DOM + Zeffy embed script.
-      // Only safe to call this after connectedCallback (this must be in the DOM).
-      if (this._connected) {
-        this._buildInlineLight(slug, height);
-      }
+      shadow.appendChild(this._buildInlineSrcdoc(slug, height));
     }
   }
 
@@ -369,63 +346,21 @@ class ZeffyDonationWidget extends HTMLElement {
     return wrapper;
   }
 
-  // Injects the Zeffy embed into the host element's LIGHT DOM so that
-  // zeffy-embed.js (injected into document.head) can locate [data-zeffy-embed]
-  // via document.querySelectorAll — which does not pierce shadow DOM.
-  _buildInlineLight(slug, height) {
-    var wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display:block;width:100%;box-sizing:border-box;';
-
-    // Primary: Zeffy's own embed engine replaces this div with the live form.
-    var embedDiv = document.createElement('div');
-    embedDiv.setAttribute('data-zeffy-embed', '');
-    // Relative path — zeffy-embed.js resolves it against https://www.zeffy.com
-    embedDiv.setAttribute('data-form-url', '/embed/donation-form/' + slug);
-
-    // Fallback iframe: shown if the zeffy-embed.js script fails to load.
-    var fallbackDiv = document.createElement('div');
-    fallbackDiv.setAttribute('data-zeffy-embed-fallback', '');
-    fallbackDiv.style.display = 'none';
-    var fallbackInner = document.createElement('div');
-    fallbackInner.style.cssText = 'position:relative;overflow:hidden;height:' + height + 'px;width:100%;';
+  _buildInlineSrcdoc(slug, height) {
     var iframe = document.createElement('iframe');
-    iframe.title = 'Donation form powered by Zeffy';
-    iframe.style.cssText = 'position:absolute;border:0;top:0;left:0;bottom:0;right:0;width:100%;height:100%;';
-    iframe.src = 'https://www.zeffy.com/embed/donation-form/' + slug;
+    iframe.style.cssText = 'display:block;width:100%;border:none;';
+    iframe.style.height = height + 'px';
+    iframe.setAttribute('allow', 'payment');
     iframe.setAttribute('allowpaymentrequest', '');
-    iframe.setAttribute('allowtransparency', 'true');
-    fallbackInner.appendChild(iframe);
-    fallbackDiv.appendChild(fallbackInner);
-
-    wrapper.appendChild(embedDiv);
-    wrapper.appendChild(fallbackDiv);
-
-    // Append to the host element's light DOM (not shadow root).
-    this.appendChild(wrapper);
-    this._lightEmbed = wrapper;
-
-    // Inject zeffy-embed.js into document.head once per page.
-    var scriptAttr = 'data-zeffy-embed-script';
-    if (!document.querySelector('script[' + scriptAttr + ']')) {
-      var script = document.createElement('script');
-      script.setAttribute(scriptAttr, '');
-      script.src = ZEFFY_EMBED_SCRIPT;
-      script.onerror = function () {
-        // Script blocked — reveal the iframe fallbacks.
-        var els = document.querySelectorAll('[data-zeffy-embed-fallback]');
-        for (var i = 0; i < els.length; i++) {
-          els[i].style.display = 'block';
-        }
-      };
-      document.head.appendChild(script);
-    } else {
-      // Script already on the page. Try a known re-init surface; otherwise
-      // the script's MutationObserver (if any) will process the new element.
-      var zeffy = window.ZeffyEmbed || window.zeffy_embed;
-      if (zeffy && typeof zeffy.init === 'function') {
-        zeffy.init();
-      }
-    }
+    var embedPath = '/embed/donation-form/' + slug;
+    iframe.srcdoc = '<!DOCTYPE html><html><head>'
+      + '<base href="https://www.zeffy.com">'
+      + '<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden}</style>'
+      + '</head><body>'
+      + '<div data-zeffy-embed data-form-url="' + embedPath + '"></div>'
+      + '<script src="https://www.zeffy.com/embed/v2/zeffy-embed.js"><\/script>'
+      + '</body></html>';
+    return iframe;
   }
 
   _openModal(embedUrl) {

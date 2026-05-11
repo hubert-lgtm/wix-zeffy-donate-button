@@ -200,7 +200,7 @@ const Panel: FC = () => {
     void widget.setProp(key, value);
   };
 
-  const applyTheme = (theme: ButtonTheme) => {
+  const applyTheme = async (theme: ButtonTheme) => {
     const radius      = String(theme.radius);
     const borderWidth = String(theme.borderWidth);
     const gradStr     = String(theme.gradientEnabled);
@@ -215,15 +215,15 @@ const Panel: FC = () => {
     setButtonGradientEnabled(gradStr);
     setButtonGradientColor2(theme.gradient2);
 
-    update(PROP_KEYS.buttonTheme,           theme.id);
-    update(PROP_KEYS.buttonBgColor,         theme.bg);
-    update(PROP_KEYS.buttonTextColor,       theme.text);
-    update(PROP_KEYS.buttonBorderRadius,    radius);
-    update(PROP_KEYS.buttonShadow,          theme.shadow);
-    update(PROP_KEYS.buttonBorderWidth,     borderWidth);
-    update(PROP_KEYS.buttonBorderColor,     theme.borderColor);
-    update(PROP_KEYS.buttonGradientEnabled, gradStr);
-    update(PROP_KEYS.buttonGradientColor2,  theme.gradient2);
+    await widget.setProp(PROP_KEYS.buttonTheme,           theme.id);
+    await widget.setProp(PROP_KEYS.buttonBgColor,         theme.bg);
+    await widget.setProp(PROP_KEYS.buttonTextColor,       theme.text);
+    await widget.setProp(PROP_KEYS.buttonBorderRadius,    radius);
+    await widget.setProp(PROP_KEYS.buttonShadow,          theme.shadow);
+    await widget.setProp(PROP_KEYS.buttonBorderWidth,     borderWidth);
+    await widget.setProp(PROP_KEYS.buttonBorderColor,     theme.borderColor);
+    await widget.setProp(PROP_KEYS.buttonGradientEnabled, gradStr);
+    await widget.setProp(PROP_KEYS.buttonGradientColor2,  theme.gradient2);
   };
 
   return (
@@ -377,7 +377,7 @@ const Panel: FC = () => {
                   return (
                     <div
                       key={theme.id}
-                      onClick={() => applyTheme(theme)}
+                      onClick={() => { void applyTheme(theme); }}
                       style={{
                         border: `2px solid ${isSelected ? '#116DFF' : '#E0E0E0'}`,
                         borderRadius: '8px',
@@ -517,7 +517,7 @@ const Panel: FC = () => {
                 min={0}
                 max={50}
                 onChange={(value) => {
-                  const n = value === null || value === undefined ? 6 : Number(value);
+                  const n = value === null || value === undefined ? 0 : Number(value);
                   const v = String(n);
                   setButtonBorderRadius(v);
                   update(PROP_KEYS.buttonBorderRadius, v);
@@ -593,7 +593,7 @@ const Panel: FC = () => {
                 min={10}
                 max={36}
                 onChange={(value) => {
-                  const n = value === null || value === undefined ? 16 : Number(value);
+                  const n = value === null || value === undefined ? 0 : Number(value);
                   const v = String(n);
                   setButtonFontSize(v);
                   update(PROP_KEYS.buttonFontSize, v);
@@ -630,7 +630,7 @@ const Panel: FC = () => {
                 min={0}
                 max={80}
                 onChange={(value) => {
-                  const n = value === null || value === undefined ? 32 : Number(value);
+                  const n = value === null || value === undefined ? 0 : Number(value);
                   const v = String(n);
                   setButtonPaddingX(v);
                   update(PROP_KEYS.buttonPaddingX, v);
@@ -647,7 +647,7 @@ const Panel: FC = () => {
                 min={0}
                 max={40}
                 onChange={(value) => {
-                  const n = value === null || value === undefined ? 12 : Number(value);
+                  const n = value === null || value === undefined ? 0 : Number(value);
                   const v = String(n);
                   setButtonPaddingY(v);
                   update(PROP_KEYS.buttonPaddingY, v);
