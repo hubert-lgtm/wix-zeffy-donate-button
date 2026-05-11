@@ -116,6 +116,76 @@ var HOST_STYLE = [
   '  border: none;',
   '}',
 
+  // Fallback shown inside the modal when the iframe is blocked (e.g. Wix editor preview CSP).
+  '.zeffy-modal-fallback {',
+  '  display: flex;',
+  '  align-items: center;',
+  '  justify-content: center;',
+  '  width: 100%;',
+  '  height: 100%;',
+  '}',
+  '.zeffy-modal-fallback-inner {',
+  '  max-width: 380px;',
+  '  text-align: center;',
+  '  padding: 32px 24px;',
+  '}',
+  '.zmf-title {',
+  '  font-size: 17px;',
+  '  font-weight: 600;',
+  '  color: #222;',
+  '  margin: 0 0 12px;',
+  '}',
+  '.zmf-body {',
+  '  font-size: 14px;',
+  '  color: #555;',
+  '  line-height: 1.6;',
+  '  margin: 0 0 20px;',
+  '}',
+  '.zmf-link {',
+  '  display: inline-block;',
+  '  padding: 11px 28px;',
+  '  background: #219653;',
+  '  color: #fff;',
+  '  border-radius: 6px;',
+  '  font-weight: 600;',
+  '  font-size: 15px;',
+  '  text-decoration: none;',
+  '  transition: opacity 0.2s;',
+  '}',
+  '.zmf-link:hover { opacity: 0.85; }',
+  '.zmf-note {',
+  '  display: block;',
+  '  margin-top: 14px;',
+  '  font-size: 11px;',
+  '  color: #aaa;',
+  '}',
+
+  // Fallback shown below the button when window.open() is blocked (e.g. Wix editor preview).
+  '.zeffy-newtab-fallback {',
+  '  margin-top: 10px;',
+  '  padding: 12px 14px;',
+  '  background: #f0f6ff;',
+  '  border: 1px solid #b8d4f0;',
+  '  border-radius: 6px;',
+  '  font-size: 12px;',
+  '  color: #1a3a5c;',
+  '  line-height: 1.6;',
+  '}',
+  '.znf-url {',
+  '  display: block;',
+  '  margin-top: 6px;',
+  '  width: 100%;',
+  '  font-family: monospace;',
+  '  font-size: 11px;',
+  '  background: #dde8ff;',
+  '  padding: 5px 8px;',
+  '  border: none;',
+  '  border-radius: 4px;',
+  '  color: #0041a8;',
+  '  cursor: text;',
+  '  box-sizing: border-box;',
+  '}',
+
   '.zeffy-state-box {',
   '  padding: 24px;',
   '  border-radius: 8px;',
@@ -140,9 +210,10 @@ class ZeffyDonationWidget extends HTMLElement {
 
   constructor() {
     super();
-    this._shadow     = this.attachShadow({ mode: 'open' });
-    this._modalOpen  = false;
-    this._escHandler = null;
+    this._shadow      = this.attachShadow({ mode: 'open' });
+    this._modalOpen   = false;
+    this._escHandler  = null;
+    this._loadTimeout = null;
 
     // Bootstrap placeholder prevents the Wix editor "failed to load" icon
     // during the gap between constructor and connectedCallback.
@@ -243,6 +314,8 @@ class ZeffyDonationWidget extends HTMLElement {
         document.removeEventListener('keydown', this._escHandler);
         this._escHandler = null;
       }
+      clearTimeout(this._loadTimeout);
+      this._loadTimeout = null;
       document.body.style.overflow = '';
       this._modalOpen = false;
     }
@@ -306,15 +379,37 @@ class ZeffyDonationWidget extends HTMLElement {
     btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
     btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
     if (styleProps.btnAction === 'new-tab') {
-      // Use window.open() — more reliable than <a target="_blank"> inside a sandboxed iframe.
       btn.addEventListener('click', function () {
-        window.open(formUrl, '_blank', 'noopener,noreferrer');
+        var win = window.open(formUrl, '_blank', 'noopener,noreferrer');
+        if (!win) {
+          // window.open() was blocked — show a friendly fallback with the URL.
+          // This happens in Wix editor/preview where the iframe sandbox blocks popups.
+          self._showNewTabFallback(formUrl, wrapper);
+        }
       });
     } else {
       btn.addEventListener('click', function () { self._openModal(embedUrl, formUrl); });
     }
     wrapper.appendChild(btn);
     return wrapper;
+  }
+
+  // Shows a small info box below the button when window.open() is blocked (Wix preview).
+  _showNewTabFallback(formUrl, wrapper) {
+    if (wrapper.querySelector('.zeffy-newtab-fallback')) return; // already shown
+    var box = document.createElement('div');
+    box.className = 'zeffy-newtab-fallback';
+    var msg = document.createElement('span');
+    msg.textContent = 'Preview mode: new tabs are blocked by Wix. This button opens the form in a new tab on your published site. Copy the link below to test:';
+    var urlInput = document.createElement('input');
+    urlInput.type      = 'text';
+    urlInput.readOnly  = true;
+    urlInput.className = 'znf-url';
+    urlInput.value     = formUrl;
+    urlInput.addEventListener('click', function () { urlInput.select(); });
+    box.appendChild(msg);
+    box.appendChild(urlInput);
+    wrapper.appendChild(box);
   }
 
   _openModal(embedUrl, formUrl) {
@@ -335,8 +430,7 @@ class ZeffyDonationWidget extends HTMLElement {
     closeBtn.textContent = '×';
     closeBtn.setAttribute('aria-label', 'Close donation form');
 
-    // Fallback link shown in top-left — lets users open the form in a new tab
-    // if the iframe is blocked (e.g. in Wix editor preview).
+    // Always-visible pill link — lets users open the form in a new tab if iframe is blocked.
     var newTabLink = document.createElement('a');
     newTabLink.className   = 'zeffy-modal-newtab';
     newTabLink.href        = formUrl;
@@ -360,7 +454,62 @@ class ZeffyDonationWidget extends HTMLElement {
     this._modalOpen = true;
     document.body.style.overflow = 'hidden';
 
+    // Detect if the iframe was blocked by the parent page's CSP (Wix editor/preview).
+    //
+    // When CSP blocks an external iframe, the browser keeps it at about:blank and
+    // fires the load event. Accessing contentWindow.location.href then returns
+    // 'about:blank' (same-origin, accessible). When Zeffy loads successfully,
+    // that access throws SecurityError (cross-origin).
+    //
+    // We defer the load listener by one tick (setTimeout 0) to skip any initial
+    // about:blank load event that fires synchronously before the navigation starts.
+    var iframeOk = false;
+
+    var showIframeFallback = function () {
+      clearTimeout(self._loadTimeout);
+      self._loadTimeout = null;
+      if (iframeOk || !self._modalOpen) return;
+      iframeOk = true; // prevent double-invoke if both load event and timeout fire
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      box.appendChild(self._buildModalFallback(formUrl));
+    };
+
+    setTimeout(function () {
+      iframe.addEventListener('load', function () {
+        if (!self._modalOpen) return;
+        try {
+          // contentWindow can be null in some strict sandboxes — treat as blocked.
+          if (!iframe.contentWindow) { showIframeFallback(); return; }
+          // Accessing href: throws SecurityError if cross-origin (Zeffy loaded OK).
+          // If accessible, the iframe is at about:blank — blocked.
+          var loc = iframe.contentWindow.location.href;
+          if (loc !== undefined && !iframeOk) showIframeFallback();
+        } catch (e) {
+          // Cross-origin SecurityError = Zeffy loaded successfully.
+          iframeOk = true;
+          clearTimeout(self._loadTimeout);
+          self._loadTimeout = null;
+        }
+      });
+    }, 0);
+
+    // Backup: if Zeffy loads slowly (>4s) we re-check rather than blindly show fallback.
+    self._loadTimeout = setTimeout(function () {
+      if (!self._modalOpen || iframeOk) return;
+      try {
+        if (!iframe.contentWindow) { showIframeFallback(); return; }
+        var loc = iframe.contentWindow.location.href;
+        // Still accessible after 4s = still about:blank = blocked.
+        if (loc !== undefined) showIframeFallback();
+      } catch (e) {
+        // Finally cross-origin = loaded slowly but successfully — do nothing.
+        iframeOk = true;
+      }
+    }, 4000);
+
     function close() {
+      clearTimeout(self._loadTimeout);
+      self._loadTimeout = null;
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
       document.body.style.overflow = '';
       self._modalOpen = false;
@@ -372,6 +521,40 @@ class ZeffyDonationWidget extends HTMLElement {
     overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
     this._escHandler = function (e) { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', this._escHandler);
+  }
+
+  // Returns the fallback div shown inside the modal when the iframe is blocked.
+  _buildModalFallback(formUrl) {
+    var outer = document.createElement('div');
+    outer.className = 'zeffy-modal-fallback';
+    var inner = document.createElement('div');
+    inner.className = 'zeffy-modal-fallback-inner';
+
+    var title = document.createElement('p');
+    title.className   = 'zmf-title';
+    title.textContent = 'Form preview not available';
+
+    var body = document.createElement('p');
+    body.className   = 'zmf-body';
+    body.textContent = 'The donation form can\'t be displayed inside the Wix editor. It works correctly on your published site — publish to verify the full experience.';
+
+    var link = document.createElement('a');
+    link.className   = 'zmf-link';
+    link.href        = formUrl;
+    link.target      = '_blank';
+    link.rel         = 'noopener noreferrer';
+    link.textContent = 'Open Form ↗';
+
+    var note = document.createElement('span');
+    note.className   = 'zmf-note';
+    note.textContent = '(link may also be blocked in preview — publish to test)';
+
+    inner.appendChild(title);
+    inner.appendChild(body);
+    inner.appendChild(link);
+    inner.appendChild(note);
+    outer.appendChild(inner);
+    return outer;
   }
 
   _buildOnboarding(styleProps) {
