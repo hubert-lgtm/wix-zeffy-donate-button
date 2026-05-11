@@ -1,4 +1,4 @@
-import React, { type FC, useState, useEffect } from 'react';
+import React, { type FC, useState, useEffect, useRef } from 'react';
 import { widget } from '@wix/editor';
 import {
   SidePanel,
@@ -83,6 +83,7 @@ const PROP_KEYS = {
   buttonGradientColor2:  'button-gradient-color2',
   buttonFontSize:        'button-font-size',
   buttonWidthPx:         'button-width-px',
+  buttonHeightPx:        'button-height-px',
   buttonPaddingX:        'button-padding-x',
   buttonPaddingY:        'button-padding-y',
 } as const;
@@ -101,6 +102,7 @@ const DEFAULTS = {
   buttonGradientColor2:  '#005BBB',
   buttonFontSize:        '16',
   buttonWidthPx:         '0',
+  buttonHeightPx:        '0',
   buttonPaddingX:        '32',
   buttonPaddingY:        '12',
 };
@@ -120,8 +122,12 @@ const Panel: FC = () => {
   const [buttonGradientColor2,  setButtonGradientColor2]  = useState(DEFAULTS.buttonGradientColor2);
   const [buttonFontSize,        setButtonFontSize]        = useState(DEFAULTS.buttonFontSize);
   const [buttonWidthPx,         setButtonWidthPx]         = useState(DEFAULTS.buttonWidthPx);
+  const [buttonHeightPx,        setButtonHeightPx]        = useState(DEFAULTS.buttonHeightPx);
   const [buttonPaddingX,        setButtonPaddingX]        = useState(DEFAULTS.buttonPaddingX);
   const [buttonPaddingY,        setButtonPaddingY]        = useState(DEFAULTS.buttonPaddingY);
+
+  // Debounce timer for applyTheme — rapid clicks cancel previous pending setProp bursts.
+  const applyThemeTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     Promise.all([
@@ -138,26 +144,28 @@ const Panel: FC = () => {
       widget.getProp(PROP_KEYS.buttonGradientColor2),
       widget.getProp(PROP_KEYS.buttonFontSize),
       widget.getProp(PROP_KEYS.buttonWidthPx),
+      widget.getProp(PROP_KEYS.buttonHeightPx),
       widget.getProp(PROP_KEYS.buttonPaddingX),
       widget.getProp(PROP_KEYS.buttonPaddingY),
     ]).then(([
-      url, bt, bbg, btc, bth, br, bs, bbw, bbc, bge, bg2, bfs, bwpx, bpx, bpy,
+      url, bt, bbg, btc, bth, br, bs, bbw, bbc, bge, bg2, bfs, bwpx, bhpx, bpx, bpy,
     ]) => {
-      if (url !== undefined && url !== null) setFormUrl(url);
-      if (bt)                                setButtonText(bt);
-      if (bbg)                               setButtonBgColor(bbg);
-      if (btc)                               setButtonTextColor(btc);
-      if (bth !== undefined && bth !== null) setButtonTheme(bth);
-      if (br)                                setButtonBorderRadius(br);
-      if (bs)                                setButtonShadow(bs);
-      if (bbw !== undefined && bbw !== null) setButtonBorderWidth(bbw);
-      if (bbc)                               setButtonBorderColor(bbc);
-      if (bge !== undefined && bge !== null) setButtonGradientEnabled(bge);
-      if (bg2)                               setButtonGradientColor2(bg2);
-      if (bfs)                               setButtonFontSize(bfs);
+      if (url !== undefined && url !== null)   setFormUrl(url);
+      if (bt)                                  setButtonText(bt);
+      if (bbg)                                 setButtonBgColor(bbg);
+      if (btc)                                 setButtonTextColor(btc);
+      if (bth !== undefined && bth !== null)   setButtonTheme(bth);
+      if (br)                                  setButtonBorderRadius(br);
+      if (bs)                                  setButtonShadow(bs);
+      if (bbw !== undefined && bbw !== null)   setButtonBorderWidth(bbw);
+      if (bbc)                                 setButtonBorderColor(bbc);
+      if (bge !== undefined && bge !== null)   setButtonGradientEnabled(bge);
+      if (bg2)                                 setButtonGradientColor2(bg2);
+      if (bfs)                                 setButtonFontSize(bfs);
       if (bwpx !== undefined && bwpx !== null) setButtonWidthPx(bwpx);
-      if (bpx)                               setButtonPaddingX(bpx);
-      if (bpy)                               setButtonPaddingY(bpy);
+      if (bhpx !== undefined && bhpx !== null) setButtonHeightPx(bhpx);
+      if (bpx)                                 setButtonPaddingX(bpx);
+      if (bpy)                                 setButtonPaddingY(bpy);
       setLoaded(true);
     });
   }, []);
@@ -177,7 +185,17 @@ const Panel: FC = () => {
     void widget.setProp(key, value);
   };
 
-  const applyTheme = async (theme: ButtonTheme) => {
+  // Clears the active theme selection from both React state and the element.
+  // Called when the user manually edits any theme-controlled prop.
+  const clearTheme = () => {
+    setButtonTheme('');
+    update(PROP_KEYS.buttonTheme, '');
+  };
+
+  // Updates local state immediately for panel feedback, then debounces all 9
+  // setProp calls by 50ms. Rapid clicks cancel prior pending bursts so only
+  // the last clicked theme's props are actually written to the element.
+  const applyTheme = (theme: ButtonTheme) => {
     const radius      = String(theme.radius);
     const borderWidth = String(theme.borderWidth);
     const gradStr     = String(theme.gradientEnabled);
@@ -192,15 +210,20 @@ const Panel: FC = () => {
     setButtonGradientEnabled(gradStr);
     setButtonGradientColor2(theme.gradient2);
 
-    await widget.setProp(PROP_KEYS.buttonTheme,           theme.id);
-    await widget.setProp(PROP_KEYS.buttonBgColor,         theme.bg);
-    await widget.setProp(PROP_KEYS.buttonTextColor,       theme.text);
-    await widget.setProp(PROP_KEYS.buttonBorderRadius,    radius);
-    await widget.setProp(PROP_KEYS.buttonShadow,          theme.shadow);
-    await widget.setProp(PROP_KEYS.buttonBorderWidth,     borderWidth);
-    await widget.setProp(PROP_KEYS.buttonBorderColor,     theme.borderColor);
-    await widget.setProp(PROP_KEYS.buttonGradientEnabled, gradStr);
-    await widget.setProp(PROP_KEYS.buttonGradientColor2,  theme.gradient2);
+    clearTimeout(applyThemeTimerRef.current);
+    applyThemeTimerRef.current = setTimeout(() => {
+      void Promise.all([
+        widget.setProp(PROP_KEYS.buttonBgColor,         theme.bg),
+        widget.setProp(PROP_KEYS.buttonTextColor,       theme.text),
+        widget.setProp(PROP_KEYS.buttonBorderRadius,    radius),
+        widget.setProp(PROP_KEYS.buttonShadow,          theme.shadow),
+        widget.setProp(PROP_KEYS.buttonBorderWidth,     borderWidth),
+        widget.setProp(PROP_KEYS.buttonBorderColor,     theme.borderColor),
+        widget.setProp(PROP_KEYS.buttonGradientEnabled, gradStr),
+        widget.setProp(PROP_KEYS.buttonGradientColor2,  theme.gradient2),
+        widget.setProp(PROP_KEYS.buttonTheme,           theme.id),
+      ]);
+    }, 50);
   };
 
   return (
@@ -266,7 +289,7 @@ const Panel: FC = () => {
               return (
                 <div
                   key={theme.id}
-                  onClick={() => { void applyTheme(theme); }}
+                  onClick={() => applyTheme(theme)}
                   style={{
                     border: `2px solid ${isSelected ? '#116DFF' : '#E0E0E0'}`,
                     borderRadius: '8px',
@@ -314,7 +337,11 @@ const Panel: FC = () => {
         <Text size="small" secondary>Style</Text>
       </SidePanel.Field>
 
-      {/* Background / gradient start color */}
+      {/* Background color
+          onChange: only fires setProp for bg-color + element theme attr — does NOT
+          call setButtonTheme() to avoid triggering a re-render that resets the picker
+          mid-drag (ColorInput picks up the new value prop and closes/resets).
+          onConfirm: also clears the theme tile in React state. */}
       <SidePanel.Field>
         <FormField label={gradEnabled ? 'Gradient start color' : 'Background color'}>
           <ColorInput
@@ -322,7 +349,6 @@ const Panel: FC = () => {
             onChange={(value: string | object) => {
               const v = String(value ?? DEFAULTS.buttonBgColor);
               setButtonBgColor(v);
-              setButtonTheme('');
               update(PROP_KEYS.buttonBgColor, v);
               update(PROP_KEYS.buttonTheme, '');
             }}
@@ -350,6 +376,7 @@ const Panel: FC = () => {
               if (!opt) return;
               const v = String(opt.id);
               setButtonGradientEnabled(v);
+              clearTheme();
               update(PROP_KEYS.buttonGradientEnabled, v);
             }}
           />
@@ -366,11 +393,14 @@ const Panel: FC = () => {
                 const v = String(value ?? DEFAULTS.buttonGradientColor2);
                 setButtonGradientColor2(v);
                 update(PROP_KEYS.buttonGradientColor2, v);
+                update(PROP_KEYS.buttonTheme, '');
               }}
               onConfirm={(value: string | object) => {
                 const v = String(value ?? DEFAULTS.buttonGradientColor2);
                 setButtonGradientColor2(v);
+                setButtonTheme('');
                 update(PROP_KEYS.buttonGradientColor2, v);
+                update(PROP_KEYS.buttonTheme, '');
               }}
             />
           </FormField>
@@ -386,11 +416,14 @@ const Panel: FC = () => {
               const v = String(value ?? DEFAULTS.buttonTextColor);
               setButtonTextColor(v);
               update(PROP_KEYS.buttonTextColor, v);
+              update(PROP_KEYS.buttonTheme, '');
             }}
             onConfirm={(value: string | object) => {
               const v = String(value ?? DEFAULTS.buttonTextColor);
               setButtonTextColor(v);
+              setButtonTheme('');
               update(PROP_KEYS.buttonTextColor, v);
+              update(PROP_KEYS.buttonTheme, '');
             }}
           />
         </FormField>
@@ -407,6 +440,7 @@ const Panel: FC = () => {
               const n = value === null || value === undefined ? 0 : Number(value);
               const v = String(n);
               setButtonBorderRadius(v);
+              clearTheme();
               update(PROP_KEYS.buttonBorderRadius, v);
             }}
           />
@@ -428,6 +462,7 @@ const Panel: FC = () => {
               if (!opt) return;
               const v = String(opt.id);
               setButtonShadow(v);
+              clearTheme();
               update(PROP_KEYS.buttonShadow, v);
             }}
           />
@@ -436,7 +471,10 @@ const Panel: FC = () => {
 
       {/* Border width */}
       <SidePanel.Field>
-        <FormField label="Border width (px)">
+        <FormField
+          label="Border width (px)"
+          infoContent="0 = no border. Increase to add a visible border around the button."
+        >
           <NumberInput
             value={Number(buttonBorderWidth)}
             min={0}
@@ -445,6 +483,7 @@ const Panel: FC = () => {
               const n = value === null || value === undefined ? 0 : Number(value);
               const v = String(n);
               setButtonBorderWidth(v);
+              clearTheme();
               update(PROP_KEYS.buttonBorderWidth, v);
             }}
           />
@@ -461,11 +500,14 @@ const Panel: FC = () => {
                 const v = String(value ?? DEFAULTS.buttonBorderColor);
                 setButtonBorderColor(v);
                 update(PROP_KEYS.buttonBorderColor, v);
+                update(PROP_KEYS.buttonTheme, '');
               }}
               onConfirm={(value: string | object) => {
                 const v = String(value ?? DEFAULTS.buttonBorderColor);
                 setButtonBorderColor(v);
+                setButtonTheme('');
                 update(PROP_KEYS.buttonBorderColor, v);
+                update(PROP_KEYS.buttonTheme, '');
               }}
             />
           </FormField>
@@ -493,7 +535,7 @@ const Panel: FC = () => {
       <SidePanel.Field>
         <FormField
           label="Button width (px)"
-          infoContent="Set to 0 for automatic width based on label length."
+          infoContent="0 = auto width (expands to fit the label)."
         >
           <NumberInput
             value={Number(buttonWidthPx)}
@@ -504,6 +546,26 @@ const Panel: FC = () => {
               const v = String(n);
               setButtonWidthPx(v);
               update(PROP_KEYS.buttonWidthPx, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
+      {/* Button height */}
+      <SidePanel.Field>
+        <FormField
+          label="Button height (px)"
+          infoContent="0 = auto height (controlled by padding). Uses min-height so padding still works."
+        >
+          <NumberInput
+            value={Number(buttonHeightPx)}
+            min={0}
+            max={120}
+            onChange={(value) => {
+              const n = value === null || value === undefined ? 0 : Number(value);
+              const v = String(n);
+              setButtonHeightPx(v);
+              update(PROP_KEYS.buttonHeightPx, v);
             }}
           />
         </FormField>
