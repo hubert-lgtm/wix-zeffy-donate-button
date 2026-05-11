@@ -124,41 +124,6 @@ var HOST_STYLE = [
   '  width: 100%;',
   '  height: 100%;',
   '}',
-  '.zeffy-modal-fallback-inner {',
-  '  max-width: 380px;',
-  '  text-align: center;',
-  '  padding: 32px 24px;',
-  '}',
-  '.zmf-title {',
-  '  font-size: 17px;',
-  '  font-weight: 600;',
-  '  color: #222;',
-  '  margin: 0 0 12px;',
-  '}',
-  '.zmf-body {',
-  '  font-size: 14px;',
-  '  color: #555;',
-  '  line-height: 1.6;',
-  '  margin: 0 0 20px;',
-  '}',
-  '.zmf-link {',
-  '  display: inline-block;',
-  '  padding: 11px 28px;',
-  '  background: #219653;',
-  '  color: #fff;',
-  '  border-radius: 6px;',
-  '  font-weight: 600;',
-  '  font-size: 15px;',
-  '  text-decoration: none;',
-  '  transition: opacity 0.2s;',
-  '}',
-  '.zmf-link:hover { opacity: 0.85; }',
-  '.zmf-note {',
-  '  display: block;',
-  '  margin-top: 14px;',
-  '  font-size: 11px;',
-  '  color: #aaa;',
-  '}',
 
   // Fallback shown below the button when window.open() is blocked (e.g. Wix editor preview).
   '.zeffy-newtab-fallback {',
@@ -400,7 +365,7 @@ class ZeffyDonationWidget extends HTMLElement {
     var box = document.createElement('div');
     box.className = 'zeffy-newtab-fallback';
     var msg = document.createElement('span');
-    msg.textContent = 'Preview mode: new tabs are blocked by Wix. This button opens the form in a new tab on your published site. Copy the link below to test:';
+    msg.textContent = "Preview mode: new tabs are blocked by Wix. Publish your site to see the actual experience. Once published, here’s where visitors will be redirected when clicking your button:";
     var urlInput = document.createElement('input');
     urlInput.type      = 'text';
     urlInput.readOnly  = true;
@@ -527,33 +492,13 @@ class ZeffyDonationWidget extends HTMLElement {
   _buildModalFallback(formUrl) {
     var outer = document.createElement('div');
     outer.className = 'zeffy-modal-fallback';
-    var inner = document.createElement('div');
-    inner.className = 'zeffy-modal-fallback-inner';
-
-    var title = document.createElement('p');
-    title.className   = 'zmf-title';
-    title.textContent = 'Form preview not available';
-
-    var body = document.createElement('p');
-    body.className   = 'zmf-body';
-    body.textContent = 'The donation form can\'t be displayed inside the Wix editor. It works correctly on your published site — publish to verify the full experience.';
-
-    var link = document.createElement('a');
-    link.className   = 'zmf-link';
-    link.href        = formUrl;
-    link.target      = '_blank';
-    link.rel         = 'noopener noreferrer';
-    link.textContent = 'Open Form ↗';
-
-    var note = document.createElement('span');
-    note.className   = 'zmf-note';
-    note.textContent = '(link may also be blocked in preview — publish to test)';
-
-    inner.appendChild(title);
-    inner.appendChild(body);
-    inner.appendChild(link);
-    inner.appendChild(note);
-    outer.appendChild(inner);
+    var disclaimer = document.createElement('div');
+    disclaimer.className = 'zeffy-newtab-fallback';
+    disclaimer.style.cssText = 'margin-top:0;max-width:360px;';
+    var msg = document.createElement('span');
+    msg.textContent = 'Preview mode: pop-ups are blocked by Wix. Publish your site to see the actual experience.';
+    disclaimer.appendChild(msg);
+    outer.appendChild(disclaimer);
     return outer;
   }
 
