@@ -1,4 +1,4 @@
-import React, { type FC, useState, useEffect, useRef } from 'react';
+import React, { type FC, useState, useEffect } from 'react';
 import { widget } from '@wix/editor';
 import {
   SidePanel,
@@ -13,68 +13,12 @@ import {
 } from '@wix/design-system';
 import '@wix/design-system/styles.global.css';
 
-interface ButtonTheme {
-  id: string;
-  name: string;
-  bg: string;
-  text: string;
-  radius: number;
-  shadow: string;
-  borderWidth: number;
-  borderColor: string;
-  gradientEnabled: boolean;
-  gradient2: string;
-}
-
-const THEMES: ButtonTheme[] = [
-  {
-    id: 'zeffy-green', name: 'Zeffy Green',
-    bg: '#219653', text: '#ffffff', radius: 6, shadow: 'none',
-    borderWidth: 0, borderColor: '#219653', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'royal-blue', name: 'Royal Blue',
-    bg: '#2558D9', text: '#ffffff', radius: 6, shadow: 'sm',
-    borderWidth: 0, borderColor: '#2558D9', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'coral', name: 'Coral',
-    bg: '#E85D4A', text: '#ffffff', radius: 8, shadow: 'none',
-    borderWidth: 0, borderColor: '#E85D4A', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'dark', name: 'Dark',
-    bg: '#1A1A2E', text: '#ffffff', radius: 4, shadow: 'md',
-    borderWidth: 0, borderColor: '#1A1A2E', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'outline', name: 'Outline',
-    bg: 'transparent', text: '#2558D9', radius: 6, shadow: 'none',
-    borderWidth: 2, borderColor: '#2558D9', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'pill', name: 'Pill',
-    bg: '#219653', text: '#ffffff', radius: 50, shadow: 'none',
-    borderWidth: 0, borderColor: '#219653', gradientEnabled: false, gradient2: '#005BBB',
-  },
-  {
-    id: 'vibrant', name: 'Vibrant',
-    bg: '#F97316', text: '#ffffff', radius: 6, shadow: 'sm',
-    borderWidth: 0, borderColor: '#F97316', gradientEnabled: true, gradient2: '#EC4899',
-  },
-  {
-    id: 'elegant', name: 'Elegant',
-    bg: '#6B7280', text: '#ffffff', radius: 2, shadow: 'none',
-    borderWidth: 0, borderColor: '#6B7280', gradientEnabled: false, gradient2: '#005BBB',
-  },
-];
-
 const PROP_KEYS = {
   formUrl:               'form-url',
   buttonText:            'button-text',
   buttonBgColor:         'button-bg-color',
   buttonTextColor:       'button-text-color',
-  buttonTheme:           'button-theme',
+  buttonAction:          'button-action',
   buttonBorderRadius:    'button-border-radius',
   buttonShadow:          'button-shadow',
   buttonBorderWidth:     'button-border-width',
@@ -93,7 +37,7 @@ const DEFAULTS = {
   buttonText:            'Donate Now',
   buttonBgColor:         '#219653',
   buttonTextColor:       '#ffffff',
-  buttonTheme:           '',
+  buttonAction:          'modal',
   buttonBorderRadius:    '6',
   buttonShadow:          'none',
   buttonBorderWidth:     '0',
@@ -113,7 +57,7 @@ const Panel: FC = () => {
   const [buttonText,            setButtonText]            = useState(DEFAULTS.buttonText);
   const [buttonBgColor,         setButtonBgColor]         = useState(DEFAULTS.buttonBgColor);
   const [buttonTextColor,       setButtonTextColor]       = useState(DEFAULTS.buttonTextColor);
-  const [buttonTheme,           setButtonTheme]           = useState(DEFAULTS.buttonTheme);
+  const [buttonAction,          setButtonAction]          = useState(DEFAULTS.buttonAction);
   const [buttonBorderRadius,    setButtonBorderRadius]    = useState(DEFAULTS.buttonBorderRadius);
   const [buttonShadow,          setButtonShadow]          = useState(DEFAULTS.buttonShadow);
   const [buttonBorderWidth,     setButtonBorderWidth]     = useState(DEFAULTS.buttonBorderWidth);
@@ -126,16 +70,13 @@ const Panel: FC = () => {
   const [buttonPaddingX,        setButtonPaddingX]        = useState(DEFAULTS.buttonPaddingX);
   const [buttonPaddingY,        setButtonPaddingY]        = useState(DEFAULTS.buttonPaddingY);
 
-  // Debounce timer for applyTheme — rapid clicks cancel previous pending setProp bursts.
-  const applyThemeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-
   useEffect(() => {
     Promise.all([
       widget.getProp(PROP_KEYS.formUrl),
       widget.getProp(PROP_KEYS.buttonText),
       widget.getProp(PROP_KEYS.buttonBgColor),
       widget.getProp(PROP_KEYS.buttonTextColor),
-      widget.getProp(PROP_KEYS.buttonTheme),
+      widget.getProp(PROP_KEYS.buttonAction),
       widget.getProp(PROP_KEYS.buttonBorderRadius),
       widget.getProp(PROP_KEYS.buttonShadow),
       widget.getProp(PROP_KEYS.buttonBorderWidth),
@@ -148,13 +89,13 @@ const Panel: FC = () => {
       widget.getProp(PROP_KEYS.buttonPaddingX),
       widget.getProp(PROP_KEYS.buttonPaddingY),
     ]).then(([
-      url, bt, bbg, btc, bth, br, bs, bbw, bbc, bge, bg2, bfs, bwpx, bhpx, bpx, bpy,
+      url, bt, bbg, btc, ba, br, bs, bbw, bbc, bge, bg2, bfs, bwpx, bhpx, bpx, bpy,
     ]) => {
       if (url !== undefined && url !== null)   setFormUrl(url);
       if (bt)                                  setButtonText(bt);
       if (bbg)                                 setButtonBgColor(bbg);
       if (btc)                                 setButtonTextColor(btc);
-      if (bth !== undefined && bth !== null)   setButtonTheme(bth);
+      if (ba === 'modal' || ba === 'new-tab')  setButtonAction(ba);
       if (br)                                  setButtonBorderRadius(br);
       if (bs)                                  setButtonShadow(bs);
       if (bbw !== undefined && bbw !== null)   setButtonBorderWidth(bbw);
@@ -183,47 +124,6 @@ const Panel: FC = () => {
 
   const update = (key: string, value: string) => {
     void widget.setProp(key, value);
-  };
-
-  // Clears the active theme selection from both React state and the element.
-  // Called when the user manually edits any theme-controlled prop.
-  const clearTheme = () => {
-    setButtonTheme('');
-    update(PROP_KEYS.buttonTheme, '');
-  };
-
-  // Updates local state immediately for panel feedback, then debounces all 9
-  // setProp calls by 50ms. Rapid clicks cancel prior pending bursts so only
-  // the last clicked theme's props are actually written to the element.
-  const applyTheme = (theme: ButtonTheme) => {
-    const radius      = String(theme.radius);
-    const borderWidth = String(theme.borderWidth);
-    const gradStr     = String(theme.gradientEnabled);
-
-    setButtonTheme(theme.id);
-    setButtonBgColor(theme.bg);
-    setButtonTextColor(theme.text);
-    setButtonBorderRadius(radius);
-    setButtonShadow(theme.shadow);
-    setButtonBorderWidth(borderWidth);
-    setButtonBorderColor(theme.borderColor);
-    setButtonGradientEnabled(gradStr);
-    setButtonGradientColor2(theme.gradient2);
-
-    clearTimeout(applyThemeTimerRef.current);
-    applyThemeTimerRef.current = setTimeout(() => {
-      void Promise.all([
-        widget.setProp(PROP_KEYS.buttonBgColor,         theme.bg),
-        widget.setProp(PROP_KEYS.buttonTextColor,       theme.text),
-        widget.setProp(PROP_KEYS.buttonBorderRadius,    radius),
-        widget.setProp(PROP_KEYS.buttonShadow,          theme.shadow),
-        widget.setProp(PROP_KEYS.buttonBorderWidth,     borderWidth),
-        widget.setProp(PROP_KEYS.buttonBorderColor,     theme.borderColor),
-        widget.setProp(PROP_KEYS.buttonGradientEnabled, gradStr),
-        widget.setProp(PROP_KEYS.buttonGradientColor2,  theme.gradient2),
-        widget.setProp(PROP_KEYS.buttonTheme,           theme.id),
-      ]);
-    }, 50);
   };
 
   return (
@@ -277,58 +177,25 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* ── Theme picker ── */}
+      {/* ── On click action ── */}
       <SidePanel.Field>
-        <FormField label="Theme">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {THEMES.map((theme) => {
-              const isSelected = buttonTheme === theme.id;
-              const previewBg  = theme.gradientEnabled
-                ? `linear-gradient(135deg, ${theme.bg}, ${theme.gradient2})`
-                : theme.bg;
-              return (
-                <div
-                  key={theme.id}
-                  onClick={() => applyTheme(theme)}
-                  style={{
-                    border: `2px solid ${isSelected ? '#116DFF' : '#E0E0E0'}`,
-                    borderRadius: '8px',
-                    padding: '10px 6px',
-                    cursor: 'pointer',
-                    textAlign: 'center' as const,
-                    background: isSelected ? '#F0F6FF' : '#fff',
-                    userSelect: 'none' as const,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'block',
-                      background: previewBg,
-                      color: theme.text,
-                      border: theme.borderWidth
-                        ? `${theme.borderWidth}px solid ${theme.borderColor}`
-                        : 'none',
-                      borderRadius: `${theme.radius}px`,
-                      padding: '5px 8px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      pointerEvents: 'none' as const,
-                      marginBottom: '5px',
-                      whiteSpace: 'nowrap' as const,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      lineHeight: '1.4',
-                    }}
-                  >
-                    Donate
-                  </div>
-                  <div style={{ fontSize: '10px', color: '#555', lineHeight: '1.2' }}>
-                    {theme.name}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <FormField
+          label="On click"
+          infoContent="Choose whether clicking the button opens the donation form in a popup or in a new browser tab."
+        >
+          <Dropdown
+            selectedId={buttonAction}
+            options={[
+              { id: 'modal',   value: 'Open in a popup' },
+              { id: 'new-tab', value: 'Open in a new tab' },
+            ]}
+            onSelect={(opt) => {
+              if (!opt) return;
+              const v = String(opt.id);
+              setButtonAction(v);
+              update(PROP_KEYS.buttonAction, v);
+            }}
+          />
         </FormField>
       </SidePanel.Field>
 
@@ -337,11 +204,7 @@ const Panel: FC = () => {
         <Text size="small" secondary>Style</Text>
       </SidePanel.Field>
 
-      {/* Background color
-          onChange: only fires setProp for bg-color + element theme attr — does NOT
-          call setButtonTheme() to avoid triggering a re-render that resets the picker
-          mid-drag (ColorInput picks up the new value prop and closes/resets).
-          onConfirm: also clears the theme tile in React state. */}
+      {/* Background color */}
       <SidePanel.Field>
         <FormField label={gradEnabled ? 'Gradient start color' : 'Background color'}>
           <ColorInput
@@ -350,14 +213,11 @@ const Panel: FC = () => {
               const v = String(value ?? DEFAULTS.buttonBgColor);
               setButtonBgColor(v);
               update(PROP_KEYS.buttonBgColor, v);
-              update(PROP_KEYS.buttonTheme, '');
             }}
             onConfirm={(value: string | object) => {
               const v = String(value ?? DEFAULTS.buttonBgColor);
               setButtonBgColor(v);
-              setButtonTheme('');
               update(PROP_KEYS.buttonBgColor, v);
-              update(PROP_KEYS.buttonTheme, '');
             }}
           />
         </FormField>
@@ -376,7 +236,6 @@ const Panel: FC = () => {
               if (!opt) return;
               const v = String(opt.id);
               setButtonGradientEnabled(v);
-              clearTheme();
               update(PROP_KEYS.buttonGradientEnabled, v);
             }}
           />
@@ -393,14 +252,11 @@ const Panel: FC = () => {
                 const v = String(value ?? DEFAULTS.buttonGradientColor2);
                 setButtonGradientColor2(v);
                 update(PROP_KEYS.buttonGradientColor2, v);
-                update(PROP_KEYS.buttonTheme, '');
               }}
               onConfirm={(value: string | object) => {
                 const v = String(value ?? DEFAULTS.buttonGradientColor2);
                 setButtonGradientColor2(v);
-                setButtonTheme('');
                 update(PROP_KEYS.buttonGradientColor2, v);
-                update(PROP_KEYS.buttonTheme, '');
               }}
             />
           </FormField>
@@ -416,14 +272,11 @@ const Panel: FC = () => {
               const v = String(value ?? DEFAULTS.buttonTextColor);
               setButtonTextColor(v);
               update(PROP_KEYS.buttonTextColor, v);
-              update(PROP_KEYS.buttonTheme, '');
             }}
             onConfirm={(value: string | object) => {
               const v = String(value ?? DEFAULTS.buttonTextColor);
               setButtonTextColor(v);
-              setButtonTheme('');
               update(PROP_KEYS.buttonTextColor, v);
-              update(PROP_KEYS.buttonTheme, '');
             }}
           />
         </FormField>
@@ -440,7 +293,6 @@ const Panel: FC = () => {
               const n = value === null || value === undefined ? 0 : Number(value);
               const v = String(n);
               setButtonBorderRadius(v);
-              clearTheme();
               update(PROP_KEYS.buttonBorderRadius, v);
             }}
           />
@@ -462,7 +314,6 @@ const Panel: FC = () => {
               if (!opt) return;
               const v = String(opt.id);
               setButtonShadow(v);
-              clearTheme();
               update(PROP_KEYS.buttonShadow, v);
             }}
           />
@@ -483,7 +334,6 @@ const Panel: FC = () => {
               const n = value === null || value === undefined ? 0 : Number(value);
               const v = String(n);
               setButtonBorderWidth(v);
-              clearTheme();
               update(PROP_KEYS.buttonBorderWidth, v);
             }}
           />
@@ -500,14 +350,11 @@ const Panel: FC = () => {
                 const v = String(value ?? DEFAULTS.buttonBorderColor);
                 setButtonBorderColor(v);
                 update(PROP_KEYS.buttonBorderColor, v);
-                update(PROP_KEYS.buttonTheme, '');
               }}
               onConfirm={(value: string | object) => {
                 const v = String(value ?? DEFAULTS.buttonBorderColor);
                 setButtonBorderColor(v);
-                setButtonTheme('');
                 update(PROP_KEYS.buttonBorderColor, v);
-                update(PROP_KEYS.buttonTheme, '');
               }}
             />
           </FormField>

@@ -2,15 +2,15 @@
  * Zeffy Donation Widget — Custom Element
  *
  * User pastes a Zeffy donation form URL in the settings panel.
- * The widget renders a styled button; clicking it opens the form
- * in a modal overlay.
+ * The widget renders a styled button; clicking it either opens the form
+ * in a modal overlay or navigates to it in a new tab.
  *
  * Observed attributes (kebab-case, set via widget.setProp):
  *   form-url                  Full zeffy.com donation-form URL
  *   button-text               Label text
  *   button-bg-color           CSS color
  *   button-text-color         CSS color
- *   button-theme              Preset id (or '' for custom)
+ *   button-action             "modal" | "new-tab"
  *   button-border-radius      px (string-encoded)
  *   button-shadow             "none" | "sm" | "md" | "lg"
  *   button-border-width       px (string-encoded)
@@ -155,7 +155,7 @@ class ZeffyDonationWidget extends HTMLElement {
       'button-text',
       'button-bg-color',
       'button-text-color',
-      'button-theme',
+      'button-action',
       'button-border-radius',
       'button-shadow',
       'button-border-width',
@@ -183,6 +183,7 @@ class ZeffyDonationWidget extends HTMLElement {
     var btnText        = this._prop('button-text',            'Donate Now');
     var btnBg          = this._prop('button-bg-color',        '#219653');
     var btnColor       = this._prop('button-text-color',      '#ffffff');
+    var btnAction      = this._prop('button-action',          'modal');
     var btnRadius      = this._prop('button-border-radius',   '6');
     var btnShadow      = this._prop('button-shadow',          'none');
     var btnBorderWidth = this._prop('button-border-width',    '0');
@@ -197,6 +198,7 @@ class ZeffyDonationWidget extends HTMLElement {
 
     var styleProps = {
       btnText: btnText, btnBg: btnBg, btnColor: btnColor,
+      btnAction: btnAction,
       btnRadius: btnRadius, btnShadow: btnShadow,
       btnBorderWidth: btnBorderWidth, btnBorderColor: btnBorderColor,
       btnGradEnabled: btnGradEnabled, btnGrad2: btnGrad2,
@@ -237,7 +239,7 @@ class ZeffyDonationWidget extends HTMLElement {
 
     if (state === 'onboarding') { shadow.appendChild(this._buildOnboarding(styleProps)); return; }
     if (state === 'error')      { shadow.appendChild(this._buildError(formUrl));          return; }
-    shadow.appendChild(this._buildButton(embedUrl, styleProps));
+    shadow.appendChild(this._buildButton(embedUrl, formUrl, styleProps));
   }
 
   _computeButtonStyle(styleProps) {
@@ -279,16 +281,30 @@ class ZeffyDonationWidget extends HTMLElement {
     return parts.join('; ');
   }
 
-  _buildButton(embedUrl, styleProps) {
+  _buildButton(embedUrl, formUrl, styleProps) {
     var self    = this;
     var wrapper = document.createElement('div');
-    var btn     = document.createElement('button');
-    btn.style.cssText = this._computeButtonStyle(styleProps);
-    btn.textContent   = styleProps.btnText || 'Donate Now';
-    btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
-    btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
-    btn.addEventListener('click',     function () { self._openModal(embedUrl); });
-    wrapper.appendChild(btn);
+    var baseStyle = this._computeButtonStyle(styleProps);
+
+    if (styleProps.btnAction === 'new-tab') {
+      var a = document.createElement('a');
+      a.href        = formUrl;
+      a.target      = '_blank';
+      a.rel         = 'noopener noreferrer';
+      a.style.cssText = baseStyle + '; display: inline-block; text-decoration: none;';
+      a.textContent = styleProps.btnText || 'Donate Now';
+      a.addEventListener('mouseover', function () { a.style.opacity = '0.85'; });
+      a.addEventListener('mouseout',  function () { a.style.opacity = '1'; });
+      wrapper.appendChild(a);
+    } else {
+      var btn = document.createElement('button');
+      btn.style.cssText = baseStyle;
+      btn.textContent   = styleProps.btnText || 'Donate Now';
+      btn.addEventListener('mouseover', function () { btn.style.opacity = '0.85'; });
+      btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
+      btn.addEventListener('click',     function () { self._openModal(embedUrl); });
+      wrapper.appendChild(btn);
+    }
     return wrapper;
   }
 
