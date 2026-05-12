@@ -116,16 +116,7 @@ var HOST_STYLE = [
   '  border: none;',
   '}',
 
-  // Fallback shown inside the modal when the iframe is blocked (e.g. Wix editor preview CSP).
-  '.zeffy-modal-fallback {',
-  '  display: flex;',
-  '  align-items: center;',
-  '  justify-content: center;',
-  '  width: 100%;',
-  '  height: 100%;',
-  '}',
-
-  // Fallback shown below the button when window.open() is blocked (e.g. Wix editor preview).
+  // Fallback shown below the button when window.open() or iframe is blocked (Wix editor/preview).
   '.zeffy-newtab-fallback {',
   '  margin-top: 10px;',
   '  padding: 12px 14px;',
@@ -345,15 +336,23 @@ class ZeffyDonationWidget extends HTMLElement {
     btn.addEventListener('mouseout',  function () { btn.style.opacity = '1'; });
     if (styleProps.btnAction === 'new-tab') {
       btn.addEventListener('click', function () {
-        var win = window.open(formUrl, '_blank', 'noopener,noreferrer');
+        // NOTE: Do NOT pass 'noopener' to window.open() — the WHATWG spec (and all modern
+        // browsers since Chrome 88 / Firefox 79 / Safari 12.1) make window.open() return null
+        // whenever 'noopener' is in the features string, even when the popup was NOT blocked.
+        // We rely on null-vs-WindowProxy to detect sandbox blocking, so we omit 'noopener'.
+        var win = window.open(formUrl, '_blank');
         if (!win) {
-          // window.open() was blocked — show a friendly fallback with the URL.
-          // This happens in Wix editor/preview where the iframe sandbox blocks popups.
+          // Blocked by the custom-element iframe sandbox. Try the parent frame — on published
+          // Wix sites the parent page is not sandboxed and can open new tabs.
+          try { win = window.parent.open(formUrl, '_blank'); } catch (e) {}
+        }
+        if (!win) {
+          // Both attempts blocked — we are in Wix preview/editor. Show friendly fallback.
           self._showNewTabFallback(formUrl, wrapper);
         }
       });
     } else {
-      btn.addEventListener('click', function () { self._openModal(embedUrl, formUrl); });
+      btn.addEventListener('click', function () { self._openModal(embedUrl, formUrl, wrapper); });
     }
     wrapper.appendChild(btn);
     return wrapper;
@@ -377,7 +376,7 @@ class ZeffyDonationWidget extends HTMLElement {
     wrapper.appendChild(box);
   }
 
-  _openModal(embedUrl, formUrl) {
+  _openModal(embedUrl, formUrl, btnWrapper) {
     var self   = this;
     var shadow = this._shadow;
 
@@ -421,53 +420,72 @@ class ZeffyDonationWidget extends HTMLElement {
 
     // Detect if the iframe was blocked by the parent page's CSP (Wix editor/preview).
     //
-    // When CSP blocks an external iframe, the browser keeps it at about:blank and
-    // fires the load event. Accessing contentWindow.location.href then returns
-    // 'about:blank' (same-origin, accessible). When Zeffy loads successfully,
-    // that access throws SecurityError (cross-origin).
+    // When CSP blocks an external iframe, the browser may keep it at about:blank OR
+    // navigate it to a browser-generated error page (chrome-error://, etc.).
+    //
+    // about:blank case:    contentWindow.location.href returns 'about:blank' (accessible) → blocked.
+    // Error page case:     contentWindow.location.href throws SecurityError (cross-origin) → ALSO blocked.
+    // Zeffy loaded:        contentWindow.location.href throws SecurityError (cross-origin) → success.
+    //
+    // To distinguish error-page SecurityError from real-load SecurityError:
+    // CSP blocks fire in < 100ms; Zeffy loading always takes > 500ms.
+    // We use a 600ms threshold: SecurityError before 600ms = CSP error page = blocked.
+    //
+    // On fallback: close the modal and show an inline info box below the button instead,
+    // matching the style of the new-tab fallback for consistency.
     //
     // We defer the load listener by one tick (setTimeout 0) to skip any initial
     // about:blank load event that fires synchronously before the navigation starts.
-    var iframeOk = false;
+    var iframeOk      = false;
+    var iframeCreatedAt = Date.now();
 
     var showIframeFallback = function () {
       clearTimeout(self._loadTimeout);
       self._loadTimeout = null;
       if (iframeOk || !self._modalOpen) return;
-      iframeOk = true; // prevent double-invoke if both load event and timeout fire
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      box.appendChild(self._buildModalFallback(formUrl));
+      iframeOk = true;
+      close();
+      // Show inline fallback below the button, same style as the new-tab fallback.
+      if (btnWrapper && !btnWrapper.querySelector('.zeffy-newtab-fallback')) {
+        var fb    = document.createElement('div');
+        fb.className = 'zeffy-newtab-fallback';
+        var fbMsg = document.createElement('span');
+        fbMsg.textContent = 'Preview mode: pop-ups are blocked by Wix. Publish your site to see the actual experience.';
+        fb.appendChild(fbMsg);
+        btnWrapper.appendChild(fb);
+      }
     };
 
     setTimeout(function () {
       iframe.addEventListener('load', function () {
         if (!self._modalOpen) return;
         try {
-          // contentWindow can be null in some strict sandboxes — treat as blocked.
           if (!iframe.contentWindow) { showIframeFallback(); return; }
-          // Accessing href: throws SecurityError if cross-origin (Zeffy loaded OK).
-          // If accessible, the iframe is at about:blank — blocked.
           var loc = iframe.contentWindow.location.href;
-          if (loc !== undefined && !iframeOk) showIframeFallback();
+          if (!iframeOk) showIframeFallback();
         } catch (e) {
-          // Cross-origin SecurityError = Zeffy loaded successfully.
-          iframeOk = true;
-          clearTimeout(self._loadTimeout);
-          self._loadTimeout = null;
+          // SecurityError: Zeffy loaded (cross-origin) OR browser CSP error page (also cross-origin).
+          // Distinguish by timing: CSP error pages fire in < 100ms; Zeffy loading takes > 500ms.
+          // Use 2000ms threshold for safety — even a warm-CDN Zeffy load takes > 300ms in practice.
+          if (Date.now() - iframeCreatedAt < 2000) {
+            showIframeFallback();
+          } else {
+            iframeOk = true;
+            clearTimeout(self._loadTimeout);
+            self._loadTimeout = null;
+          }
         }
       });
     }, 0);
 
-    // Backup: if Zeffy loads slowly (>4s) we re-check rather than blindly show fallback.
     self._loadTimeout = setTimeout(function () {
       if (!self._modalOpen || iframeOk) return;
       try {
         if (!iframe.contentWindow) { showIframeFallback(); return; }
         var loc = iframe.contentWindow.location.href;
-        // Still accessible after 4s = still about:blank = blocked.
         if (loc !== undefined) showIframeFallback();
       } catch (e) {
-        // Finally cross-origin = loaded slowly but successfully — do nothing.
+        // SecurityError at 4s is almost certainly real Zeffy load (CSP errors fire instantly).
         iframeOk = true;
       }
     }, 4000);
@@ -486,20 +504,6 @@ class ZeffyDonationWidget extends HTMLElement {
     overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
     this._escHandler = function (e) { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', this._escHandler);
-  }
-
-  // Returns the fallback div shown inside the modal when the iframe is blocked.
-  _buildModalFallback(formUrl) {
-    var outer = document.createElement('div');
-    outer.className = 'zeffy-modal-fallback';
-    var disclaimer = document.createElement('div');
-    disclaimer.className = 'zeffy-newtab-fallback';
-    disclaimer.style.cssText = 'margin-top:0;max-width:360px;';
-    var msg = document.createElement('span');
-    msg.textContent = 'Preview mode: pop-ups are blocked by Wix. Publish your site to see the actual experience.';
-    disclaimer.appendChild(msg);
-    outer.appendChild(disclaimer);
-    return outer;
   }
 
   _buildOnboarding(styleProps) {
