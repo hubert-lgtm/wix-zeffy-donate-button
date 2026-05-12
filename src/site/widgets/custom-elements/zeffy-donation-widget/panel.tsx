@@ -26,6 +26,7 @@ const PROP_KEYS = {
   buttonGradientEnabled: 'button-gradient-enabled',
   buttonGradientColor2:  'button-gradient-color2',
   buttonFontSize:        'button-font-size',
+  buttonFontFamily:      'button-font-family',
   buttonWidthPx:         'button-width-px',
   buttonHeightPx:        'button-height-px',
   buttonPaddingX:        'button-padding-x',
@@ -37,19 +38,29 @@ const DEFAULTS = {
   buttonText:            'Donate Now',
   buttonBgColor:         '#219653',
   buttonTextColor:       '#ffffff',
-  buttonAction:          'modal',
+  buttonAction:          'new-tab',
   buttonBorderRadius:    '6',
   buttonShadow:          'none',
-  buttonBorderWidth:     '0',
+  buttonBorderWidth:     '1',
   buttonBorderColor:     '#219653',
   buttonGradientEnabled: 'false',
   buttonGradientColor2:  '#005BBB',
   buttonFontSize:        '16',
+  buttonFontFamily:      '',
   buttonWidthPx:         '0',
   buttonHeightPx:        '0',
   buttonPaddingX:        '32',
   buttonPaddingY:        '12',
 };
+
+const FONT_OPTIONS = [
+  { id: '',                                              value: 'Default (System)' },
+  { id: 'Arial, Helvetica, sans-serif',                  value: 'Arial' },
+  { id: 'Georgia, serif',                                value: 'Georgia' },
+  { id: '"Trebuchet MS", Helvetica, sans-serif',         value: 'Trebuchet MS' },
+  { id: 'Verdana, Geneva, sans-serif',                   value: 'Verdana' },
+  { id: '"Times New Roman", Times, serif',               value: 'Times New Roman' },
+];
 
 const Panel: FC = () => {
   const [loaded,                setLoaded]                = useState(false);
@@ -60,11 +71,11 @@ const Panel: FC = () => {
   const [buttonAction,          setButtonAction]          = useState(DEFAULTS.buttonAction);
   const [buttonBorderRadius,    setButtonBorderRadius]    = useState(DEFAULTS.buttonBorderRadius);
   const [buttonShadow,          setButtonShadow]          = useState(DEFAULTS.buttonShadow);
-  const [buttonBorderWidth,     setButtonBorderWidth]     = useState(DEFAULTS.buttonBorderWidth);
   const [buttonBorderColor,     setButtonBorderColor]     = useState(DEFAULTS.buttonBorderColor);
   const [buttonGradientEnabled, setButtonGradientEnabled] = useState(DEFAULTS.buttonGradientEnabled);
   const [buttonGradientColor2,  setButtonGradientColor2]  = useState(DEFAULTS.buttonGradientColor2);
   const [buttonFontSize,        setButtonFontSize]        = useState(DEFAULTS.buttonFontSize);
+  const [buttonFontFamily,      setButtonFontFamily]      = useState(DEFAULTS.buttonFontFamily);
   const [buttonWidthPx,         setButtonWidthPx]         = useState(DEFAULTS.buttonWidthPx);
   const [buttonHeightPx,        setButtonHeightPx]        = useState(DEFAULTS.buttonHeightPx);
   const [buttonPaddingX,        setButtonPaddingX]        = useState(DEFAULTS.buttonPaddingX);
@@ -79,17 +90,17 @@ const Panel: FC = () => {
       widget.getProp(PROP_KEYS.buttonAction),
       widget.getProp(PROP_KEYS.buttonBorderRadius),
       widget.getProp(PROP_KEYS.buttonShadow),
-      widget.getProp(PROP_KEYS.buttonBorderWidth),
       widget.getProp(PROP_KEYS.buttonBorderColor),
       widget.getProp(PROP_KEYS.buttonGradientEnabled),
       widget.getProp(PROP_KEYS.buttonGradientColor2),
       widget.getProp(PROP_KEYS.buttonFontSize),
+      widget.getProp(PROP_KEYS.buttonFontFamily),
       widget.getProp(PROP_KEYS.buttonWidthPx),
       widget.getProp(PROP_KEYS.buttonHeightPx),
       widget.getProp(PROP_KEYS.buttonPaddingX),
       widget.getProp(PROP_KEYS.buttonPaddingY),
     ]).then(([
-      url, bt, bbg, btc, ba, br, bs, bbw, bbc, bge, bg2, bfs, bwpx, bhpx, bpx, bpy,
+      url, bt, bbg, btc, ba, br, bs, bbc, bge, bg2, bfs, bff, bwpx, bhpx, bpx, bpy,
     ]) => {
       if (url !== undefined && url !== null)   setFormUrl(url);
       if (bt)                                  setButtonText(bt);
@@ -98,11 +109,11 @@ const Panel: FC = () => {
       if (ba === 'modal' || ba === 'new-tab')  setButtonAction(ba);
       if (br)                                  setButtonBorderRadius(br);
       if (bs)                                  setButtonShadow(bs);
-      if (bbw !== undefined && bbw !== null)   setButtonBorderWidth(bbw);
       if (bbc)                                 setButtonBorderColor(bbc);
       if (bge !== undefined && bge !== null)   setButtonGradientEnabled(bge);
       if (bg2)                                 setButtonGradientColor2(bg2);
       if (bfs)                                 setButtonFontSize(bfs);
+      if (bff !== undefined && bff !== null)   setButtonFontFamily(bff);
       if (bwpx !== undefined && bwpx !== null) setButtonWidthPx(bwpx);
       if (bhpx !== undefined && bhpx !== null) setButtonHeightPx(bhpx);
       if (bpx)                                 setButtonPaddingX(bpx);
@@ -120,7 +131,6 @@ const Panel: FC = () => {
   }
 
   const gradEnabled = buttonGradientEnabled === 'true';
-  const hasBorder   = parseInt(buttonBorderWidth, 10) > 0;
 
   const update = (key: string, value: string) => {
     void widget.setProp(key, value);
@@ -162,6 +172,28 @@ const Panel: FC = () => {
         </Text>
       </SidePanel.Field>
 
+      {/* ── On click action ── */}
+      <SidePanel.Field>
+        <FormField
+          label="On click"
+          infoContent="Choose whether clicking the button opens the donation form in a new browser tab or in a popup."
+        >
+          <Dropdown
+            selectedId={buttonAction}
+            options={[
+              { id: 'new-tab', value: 'Open in a new tab' },
+              { id: 'modal',   value: 'Open in a popup' },
+            ]}
+            onSelect={(opt) => {
+              if (!opt) return;
+              const v = String(opt.id);
+              setButtonAction(v);
+              update(PROP_KEYS.buttonAction, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
       {/* ── Button label ── */}
       <SidePanel.Field>
         <FormField label="Button label">
@@ -177,34 +209,59 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* ── On click action ── */}
+      {/* ── Text color ── */}
       <SidePanel.Field>
-        <FormField
-          label="On click"
-          infoContent="Choose whether clicking the button opens the donation form in a popup or in a new browser tab."
-        >
-          <Dropdown
-            selectedId={buttonAction}
-            options={[
-              { id: 'modal',   value: 'Open in a popup' },
-              { id: 'new-tab', value: 'Open in a new tab' },
-            ]}
-            onSelect={(opt) => {
-              if (!opt) return;
-              const v = String(opt.id);
-              setButtonAction(v);
-              update(PROP_KEYS.buttonAction, v);
+        <FormField label="Text color">
+          <ColorInput
+            value={buttonTextColor}
+            onChange={(value: string | object) => {
+              const v = String(value ?? DEFAULTS.buttonTextColor);
+              setButtonTextColor(v);
+              update(PROP_KEYS.buttonTextColor, v);
+            }}
+            onConfirm={(value: string | object) => {
+              const v = String(value ?? DEFAULTS.buttonTextColor);
+              setButtonTextColor(v);
+              update(PROP_KEYS.buttonTextColor, v);
             }}
           />
         </FormField>
       </SidePanel.Field>
 
-      {/* ── Style section ── */}
+      {/* ── Font family ── */}
       <SidePanel.Field>
-        <Text size="small" secondary>Style</Text>
+        <FormField label="Font">
+          <Dropdown
+            selectedId={buttonFontFamily}
+            options={FONT_OPTIONS}
+            onSelect={(opt) => {
+              if (!opt) return;
+              const v = String(opt.id);
+              setButtonFontFamily(v);
+              update(PROP_KEYS.buttonFontFamily, v);
+            }}
+          />
+        </FormField>
       </SidePanel.Field>
 
-      {/* Background color */}
+      {/* ── Font size ── */}
+      <SidePanel.Field>
+        <FormField label="Font size (px)">
+          <NumberInput
+            value={Number(buttonFontSize)}
+            min={10}
+            max={36}
+            onChange={(value) => {
+              const n = value === null || value === undefined ? 0 : Number(value);
+              const v = String(n);
+              setButtonFontSize(v);
+              update(PROP_KEYS.buttonFontSize, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
+      {/* ── Background color ── */}
       <SidePanel.Field>
         <FormField label={gradEnabled ? 'Gradient start color' : 'Background color'}>
           <ColorInput
@@ -223,7 +280,47 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* Gradient toggle */}
+      {/* ── Border color ── */}
+      <SidePanel.Field>
+        <FormField label="Border color">
+          <ColorInput
+            value={buttonBorderColor}
+            onChange={(value: string | object) => {
+              const v = String(value ?? DEFAULTS.buttonBorderColor);
+              setButtonBorderColor(v);
+              update(PROP_KEYS.buttonBorderColor, v);
+            }}
+            onConfirm={(value: string | object) => {
+              const v = String(value ?? DEFAULTS.buttonBorderColor);
+              setButtonBorderColor(v);
+              update(PROP_KEYS.buttonBorderColor, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
+      {/* ── Shadow ── */}
+      <SidePanel.Field>
+        <FormField label="Button shadow">
+          <Dropdown
+            selectedId={buttonShadow}
+            options={[
+              { id: 'none', value: 'None' },
+              { id: 'sm',   value: 'Small' },
+              { id: 'md',   value: 'Medium' },
+              { id: 'lg',   value: 'Large' },
+            ]}
+            onSelect={(opt) => {
+              if (!opt) return;
+              const v = String(opt.id);
+              setButtonShadow(v);
+              update(PROP_KEYS.buttonShadow, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
+      {/* ── Gradient toggle ── */}
       <SidePanel.Field>
         <FormField label="Gradient">
           <Dropdown
@@ -263,122 +360,7 @@ const Panel: FC = () => {
         </SidePanel.Field>
       )}
 
-      {/* Text color */}
-      <SidePanel.Field>
-        <FormField label="Text color">
-          <ColorInput
-            value={buttonTextColor}
-            onChange={(value: string | object) => {
-              const v = String(value ?? DEFAULTS.buttonTextColor);
-              setButtonTextColor(v);
-              update(PROP_KEYS.buttonTextColor, v);
-            }}
-            onConfirm={(value: string | object) => {
-              const v = String(value ?? DEFAULTS.buttonTextColor);
-              setButtonTextColor(v);
-              update(PROP_KEYS.buttonTextColor, v);
-            }}
-          />
-        </FormField>
-      </SidePanel.Field>
-
-      {/* Corner roundness */}
-      <SidePanel.Field>
-        <FormField label="Corner roundness (px)">
-          <NumberInput
-            value={Number(buttonBorderRadius)}
-            min={0}
-            max={50}
-            onChange={(value) => {
-              const n = value === null || value === undefined ? 0 : Number(value);
-              const v = String(n);
-              setButtonBorderRadius(v);
-              update(PROP_KEYS.buttonBorderRadius, v);
-            }}
-          />
-        </FormField>
-      </SidePanel.Field>
-
-      {/* Shadow */}
-      <SidePanel.Field>
-        <FormField label="Button shadow">
-          <Dropdown
-            selectedId={buttonShadow}
-            options={[
-              { id: 'none', value: 'None' },
-              { id: 'sm',   value: 'Small' },
-              { id: 'md',   value: 'Medium' },
-              { id: 'lg',   value: 'Large' },
-            ]}
-            onSelect={(opt) => {
-              if (!opt) return;
-              const v = String(opt.id);
-              setButtonShadow(v);
-              update(PROP_KEYS.buttonShadow, v);
-            }}
-          />
-        </FormField>
-      </SidePanel.Field>
-
-      {/* Border width */}
-      <SidePanel.Field>
-        <FormField
-          label="Border width (px)"
-          infoContent="0 = no border. Increase to add a visible border around the button."
-        >
-          <NumberInput
-            value={Number(buttonBorderWidth)}
-            min={0}
-            max={8}
-            onChange={(value) => {
-              const n = value === null || value === undefined ? 0 : Number(value);
-              const v = String(n);
-              setButtonBorderWidth(v);
-              update(PROP_KEYS.buttonBorderWidth, v);
-            }}
-          />
-        </FormField>
-      </SidePanel.Field>
-
-      {/* Border color (only when border is enabled) */}
-      {hasBorder && (
-        <SidePanel.Field>
-          <FormField label="Border color">
-            <ColorInput
-              value={buttonBorderColor}
-              onChange={(value: string | object) => {
-                const v = String(value ?? DEFAULTS.buttonBorderColor);
-                setButtonBorderColor(v);
-                update(PROP_KEYS.buttonBorderColor, v);
-              }}
-              onConfirm={(value: string | object) => {
-                const v = String(value ?? DEFAULTS.buttonBorderColor);
-                setButtonBorderColor(v);
-                update(PROP_KEYS.buttonBorderColor, v);
-              }}
-            />
-          </FormField>
-        </SidePanel.Field>
-      )}
-
-      {/* Font size */}
-      <SidePanel.Field>
-        <FormField label="Font size (px)">
-          <NumberInput
-            value={Number(buttonFontSize)}
-            min={10}
-            max={36}
-            onChange={(value) => {
-              const n = value === null || value === undefined ? 0 : Number(value);
-              const v = String(n);
-              setButtonFontSize(v);
-              update(PROP_KEYS.buttonFontSize, v);
-            }}
-          />
-        </FormField>
-      </SidePanel.Field>
-
-      {/* Button width */}
+      {/* ── Button width ── */}
       <SidePanel.Field>
         <FormField
           label="Button width (px)"
@@ -398,7 +380,7 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* Button height */}
+      {/* ── Button height ── */}
       <SidePanel.Field>
         <FormField
           label="Button height (px)"
@@ -418,7 +400,7 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* Horizontal padding */}
+      {/* ── Horizontal padding ── */}
       <SidePanel.Field>
         <FormField label="Horizontal padding (px)">
           <NumberInput
@@ -435,7 +417,7 @@ const Panel: FC = () => {
         </FormField>
       </SidePanel.Field>
 
-      {/* Vertical padding */}
+      {/* ── Vertical padding ── */}
       <SidePanel.Field>
         <FormField label="Vertical padding (px)">
           <NumberInput
@@ -447,6 +429,23 @@ const Panel: FC = () => {
               const v = String(n);
               setButtonPaddingY(v);
               update(PROP_KEYS.buttonPaddingY, v);
+            }}
+          />
+        </FormField>
+      </SidePanel.Field>
+
+      {/* ── Corner roundness ── */}
+      <SidePanel.Field>
+        <FormField label="Corner roundness (px)">
+          <NumberInput
+            value={Number(buttonBorderRadius)}
+            min={0}
+            max={50}
+            onChange={(value) => {
+              const n = value === null || value === undefined ? 0 : Number(value);
+              const v = String(n);
+              setButtonBorderRadius(v);
+              update(PROP_KEYS.buttonBorderRadius, v);
             }}
           />
         </FormField>

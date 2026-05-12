@@ -206,6 +206,7 @@ class ZeffyDonationWidget extends HTMLElement {
       'button-gradient-enabled',
       'button-gradient-color2',
       'button-font-size',
+      'button-font-family',
       'button-width-px',
       'button-height-px',
       'button-padding-x',
@@ -226,14 +227,15 @@ class ZeffyDonationWidget extends HTMLElement {
     var btnText        = this._prop('button-text',            'Donate Now');
     var btnBg          = this._prop('button-bg-color',        '#219653');
     var btnColor       = this._prop('button-text-color',      '#ffffff');
-    var btnAction      = this._prop('button-action',          'modal');
+    var btnAction      = this._prop('button-action',          'new-tab');
     var btnRadius      = this._prop('button-border-radius',   '6');
     var btnShadow      = this._prop('button-shadow',          'none');
-    var btnBorderWidth = this._prop('button-border-width',    '0');
+    var btnBorderWidth = this._prop('button-border-width',    '1');
     var btnBorderColor = this._prop('button-border-color',    '#219653');
     var btnGradEnabled = this._prop('button-gradient-enabled','false');
     var btnGrad2       = this._prop('button-gradient-color2', '#005BBB');
     var btnFontSize    = this._prop('button-font-size',       '16');
+    var btnFontFamily  = this._prop('button-font-family',     '');
     var btnWidthPx     = this._prop('button-width-px',        '0');
     var btnHeightPx    = this._prop('button-height-px',       '0');
     var btnPaddingX    = this._prop('button-padding-x',       '32');
@@ -245,7 +247,8 @@ class ZeffyDonationWidget extends HTMLElement {
       btnRadius: btnRadius, btnShadow: btnShadow,
       btnBorderWidth: btnBorderWidth, btnBorderColor: btnBorderColor,
       btnGradEnabled: btnGradEnabled, btnGrad2: btnGrad2,
-      btnFontSize: btnFontSize, btnWidthPx: btnWidthPx, btnHeightPx: btnHeightPx,
+      btnFontSize: btnFontSize, btnFontFamily: btnFontFamily,
+      btnWidthPx: btnWidthPx, btnHeightPx: btnHeightPx,
       btnPaddingX: btnPaddingX, btnPaddingY: btnPaddingY,
     };
 
@@ -314,9 +317,11 @@ class ZeffyDonationWidget extends HTMLElement {
       ? 'border: ' + borderWidth + 'px solid ' + borderColor
       : 'border: none');
     if (shadowVal) parts.push('box-shadow: ' + shadowVal);
+    var fontFamily = styleProps.btnFontFamily
+      || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
     parts.push('font-size: ' + fontSize + 'px');
     parts.push('font-weight: 600');
-    parts.push('font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif');
+    parts.push('font-family: ' + fontFamily);
     parts.push(widthPx > 0 ? 'width: ' + widthPx + 'px' : 'width: auto');
     if (heightPx > 0) parts.push('min-height: ' + heightPx + 'px');
     parts.push('padding: ' + paddingY + 'px ' + paddingX + 'px');
