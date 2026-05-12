@@ -428,21 +428,18 @@ class ZeffyDonationWidget extends HTMLElement {
     // When CSP blocks an external iframe, the browser may keep it at about:blank OR
     // navigate it to a browser-generated error page (chrome-error://, etc.).
     //
-    // about:blank case:    contentWindow.location.href returns 'about:blank' (accessible) → blocked.
-    // Error page case:     contentWindow.location.href throws SecurityError (cross-origin) → ALSO blocked.
-    // Zeffy loaded:        contentWindow.location.href throws SecurityError (cross-origin) → success.
+    // Detect if the iframe was blocked by the parent page's CSP (Wix editor/preview).
     //
-    // To distinguish error-page SecurityError from real-load SecurityError:
-    // CSP blocks fire in < 100ms; Zeffy loading always takes > 500ms.
-    // We use a 600ms threshold: SecurityError before 600ms = CSP error page = blocked.
+    // When Wix CSP blocks an external iframe, the browser keeps it at about:blank and fires
+    // the load event. Accessing contentWindow.location.href returns 'about:blank' (accessible).
+    // When Zeffy loads successfully, that access throws SecurityError (cross-origin).
     //
     // On fallback: close the modal and show an inline info box below the button instead,
     // matching the style of the new-tab fallback for consistency.
     //
     // We defer the load listener by one tick (setTimeout 0) to skip any initial
     // about:blank load event that fires synchronously before the navigation starts.
-    var iframeOk      = false;
-    var iframeCreatedAt = Date.now();
+    var iframeOk = false;
 
     var showIframeFallback = function () {
       clearTimeout(self._loadTimeout);
@@ -469,16 +466,10 @@ class ZeffyDonationWidget extends HTMLElement {
           var loc = iframe.contentWindow.location.href;
           if (!iframeOk) showIframeFallback();
         } catch (e) {
-          // SecurityError: Zeffy loaded (cross-origin) OR browser CSP error page (also cross-origin).
-          // Distinguish by timing: CSP error pages fire in < 100ms; Zeffy loading takes > 500ms.
-          // Use 2000ms threshold for safety — even a warm-CDN Zeffy load takes > 300ms in practice.
-          if (Date.now() - iframeCreatedAt < 2000) {
-            showIframeFallback();
-          } else {
-            iframeOk = true;
-            clearTimeout(self._loadTimeout);
-            self._loadTimeout = null;
-          }
+          // SecurityError = cross-origin = Zeffy loaded successfully.
+          iframeOk = true;
+          clearTimeout(self._loadTimeout);
+          self._loadTimeout = null;
         }
       });
     }, 0);
