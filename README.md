@@ -36,6 +36,7 @@ src/site/widgets/custom-elements/zeffy-donation-widget/
 test/qa.html     headless-browser harness, 10 scenarios, 0 fails
 public/          Vercel deploy artifacts (mirror of test/ + widget.js)
 HANDOFF.md       fix narrative + remaining work for App Market submission
+INSTALL-ANALYSIS.md  who installs the app — install cohorts joined to Zeffy org data
 ```
 
 ## Local development
