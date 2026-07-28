@@ -6,6 +6,7 @@ What the 178 Wix App Market installs are: net-new demand, product adoption, or r
 - **Joined to:** `ANALYTICS.FCT_ORGANIZATION` and `ANALYTICS.FCT_USER` (Snowflake via Metabase, `database_id: 2`)
 - **Last run:** 2026-07-28
 - **Notion one-pager for leadership:** [Potentiel des plugins WordPress et Wix](https://app.notion.com/p/3ab5553ff365816e8388c6ccb7699c53)
+- **Companion doc:** [SEARCH-DEMAND.md](./SEARCH-DEMAND.md) — paid search exposure and US demand sizing for both plugins
 
 ## Headline
 
