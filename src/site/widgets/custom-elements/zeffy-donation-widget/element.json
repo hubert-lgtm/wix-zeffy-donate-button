@@ -10,8 +10,8 @@
     "defaultHeight": 60
   },
   "installation": {
-    "autoAddToSite": true,
-    "essential": true
+    "autoAddToSite": false,
+    "essential": false
   },
   "presets": [
     {
