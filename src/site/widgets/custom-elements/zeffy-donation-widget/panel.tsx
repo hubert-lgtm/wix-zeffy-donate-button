@@ -143,7 +143,7 @@ const Panel: FC = () => {
       <SidePanel.Field>
         <FormField
           label="Zeffy form URL"
-          infoContent="Paste your Zeffy donation form URL. The widget converts it to the embed format automatically."
+          infoContent="Paste the link to any Zeffy form: donation form, event, shop, membership, raffle, auction or peer-to-peer campaign. The widget converts it to the embed format automatically."
         >
           <Input
             value={formUrl}
@@ -176,7 +176,7 @@ const Panel: FC = () => {
       <SidePanel.Field>
         <FormField
           label="On click"
-          infoContent="Choose whether clicking the button opens the donation form in a new browser tab or in a popup."
+          infoContent="Choose whether clicking the button opens the form in a new browser tab or in a popup."
         >
           <Dropdown
             selectedId={buttonAction}
