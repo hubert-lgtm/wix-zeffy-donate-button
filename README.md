@@ -1,6 +1,6 @@
 # Zeffy Donation Widget for Wix
 
-Wix App Market app — a Custom Element Site Widget that lets nonprofits put any Zeffy form on their Wix site: donation forms, events, shops, memberships, raffles, auctions and peer-to-peer campaigns. The button either opens the form in a popup or in a new tab.
+Wix App Market app — a Custom Element Site Widget that lets nonprofits embed Zeffy donation forms on their Wix sites. Two display modes: inline iframe or button-to-popup modal.
 
 - **App ID:** `5b8486fa-5c74-41f1-a0cf-db8ab3cb7f1f`
 - **Dev site:** Dev Sitex 1616027752

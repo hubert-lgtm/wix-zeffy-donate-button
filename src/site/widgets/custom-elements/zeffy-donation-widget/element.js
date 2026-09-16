@@ -1,14 +1,12 @@
 /**
  * Zeffy Donation Widget — Custom Element
  *
- * User pastes a Zeffy form URL in the settings panel.
+ * User pastes a Zeffy donation form URL in the settings panel.
  * The widget renders a styled button; clicking it either opens the form
  * in a modal overlay or navigates to it in a new tab.
  *
  * Observed attributes (kebab-case, set via widget.setProp):
- *   form-url                  Any zeffy.com form URL: donation form, ticketing
- *                             (events, memberships, raffles, shops, auctions),
- *                             peer-to-peer campaign, team or individual fundraiser
+ *   form-url                  Full zeffy.com donation-form URL
  *   button-text               Label text
  *   button-bg-color           CSS color
  *   button-text-color         CSS color
@@ -36,45 +34,15 @@ var SHADOW_VALUES = {
   'lg':   '0 8px 24px rgba(0,0,0,0.35)',
 };
 
-// Public form URL -> the embed path that serves it. Ticketing covers events,
-// memberships, raffles, shops and auctions. Peer-to-peer campaigns, their teams
-// and their individual fundraisers are all served by the donation-form embed,
-// each under its own path, so attribution is preserved.
-var EMBED_PATH_BY_FORM_TYPE = {
-  'donation-form': 'donation-form',
-  'ticketing':     'ticketing',
-  'peer-to-peer':  'donation-form',
-  'team':          'donation-form',
-  'fundraising':   'donation-form',
-};
+function isValidZeffyUrl(url) {
+  return typeof url === 'string' &&
+    url.indexOf('zeffy.com') !== -1 &&
+    url.indexOf('/donation-form/') !== -1;
+}
 
-// No Zeffy form type is two letters long, so a two-letter segment is always a locale.
-// If that ever changes, this would swallow the new type.
-var LOCALE_SEGMENT = /^[a-z]{2}(-[a-z]{2})?$/i;
-
-function toEmbedUrl(url) {
-  if (typeof url !== 'string') return null;
-
-  var parsed = url.match(/^https?:\/\/([^/?#]+)([^?#]*)/i);
-  if (!parsed) return null;
-
-  var host = parsed[1].toLowerCase().split(':')[0];
-  if (host !== 'zeffy.com' && host.slice(-10) !== '.zeffy.com') return null;
-
-  var segments = parsed[2].split('/').filter(Boolean);
-
-  // The locale prefix is optional and decides which language the form opens in,
-  // so carry it over instead of letting Zeffy fall back to the form's own locale.
-  var locale = LOCALE_SEGMENT.test(segments[0] || '') ? segments.shift() : null;
-
-  // An already-converted embed URL is accepted as-is.
-  if (segments[0] === 'embed') segments.shift();
-
-  var embedPath = EMBED_PATH_BY_FORM_TYPE[segments[0]];
-  var formPath  = segments[1];
-  if (!embedPath || !formPath) return null;
-
-  return 'https://www.zeffy.com/' + (locale ? locale + '/' : '') + 'embed/' + embedPath + '/' + formPath;
+function toEmbedSlug(url) {
+  var match = url.match(/\/donation-form\/([^/?#]+)/);
+  return match ? match[1] : null;
 }
 
 var HOST_STYLE = [
@@ -219,7 +187,7 @@ class ZeffyDonationWidget extends HTMLElement {
     box.style.cssText = 'min-height:120px;display:flex;align-items:center;justify-content:center;';
     var label = document.createElement('div');
     label.style.cssText = 'font-size:14px;font-weight:600;';
-    label.textContent = 'Zeffy form';
+    label.textContent = 'Zeffy donation form';
     box.appendChild(label);
     return box;
   }
@@ -291,9 +259,12 @@ class ZeffyDonationWidget extends HTMLElement {
 
     if (!formUrl) {
       state = 'onboarding';
-    } else {
-      embedUrl = toEmbedUrl(formUrl);
+    } else if (formUrl === DEMO_URL || isValidZeffyUrl(formUrl)) {
+      var slug = toEmbedSlug(formUrl);
+      embedUrl = slug ? 'https://www.zeffy.com/embed/donation-form/' + slug : null;
       state    = embedUrl ? ((formUrl === DEMO_URL) ? 'demo' : 'ok') : 'error';
+    } else {
+      state = 'error';
     }
 
     // If a modal is open when props change, clean up before rebuilding the DOM.
@@ -418,7 +389,7 @@ class ZeffyDonationWidget extends HTMLElement {
     overlay.className = 'zeffy-modal-overlay';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Zeffy form');
+    overlay.setAttribute('aria-label', 'Donation form');
 
     var box = document.createElement('div');
     box.className = 'zeffy-modal-box';
@@ -426,7 +397,7 @@ class ZeffyDonationWidget extends HTMLElement {
     var closeBtn = document.createElement('button');
     closeBtn.className = 'zeffy-modal-close';
     closeBtn.textContent = '×';
-    closeBtn.setAttribute('aria-label', 'Close form');
+    closeBtn.setAttribute('aria-label', 'Close donation form');
 
     // Always-visible pill link — lets users open the form in a new tab if iframe is blocked.
     var newTabLink = document.createElement('a');
@@ -550,7 +521,7 @@ class ZeffyDonationWidget extends HTMLElement {
 
     var sub = document.createElement('p');
     sub.style.cssText = 'font-size:14px;margin:0 0 12px;';
-    sub.textContent   = 'Create a free account and a form, then paste your form URL in the settings panel.';
+    sub.textContent   = 'Create a free account and donation form, then paste your form URL in the settings panel.';
 
     var link = document.createElement('a');
     link.href        = ZEFFY_SIGNUP;
@@ -574,11 +545,11 @@ class ZeffyDonationWidget extends HTMLElement {
 
     var sub = document.createElement('p');
     sub.style.cssText = 'font-size:13px;margin:0 0 10px;';
-    sub.textContent   = 'The URL must link to a Zeffy form. Donation forms, events, shops, memberships, raffles, auctions and peer-to-peer campaigns all work. For example:';
+    sub.textContent   = 'The URL must be a Zeffy donation form link, e.g.:';
 
     var example = document.createElement('code');
-    example.style.cssText = 'display:block;white-space:pre-line;font-size:12px;word-break:break-all;background:#ffeaea;padding:6px 10px;border-radius:4px;margin-bottom:10px;';
-    example.textContent   = 'https://www.zeffy.com/en-US/donation-form/your-form\nhttps://www.zeffy.com/en-US/ticketing/your-event';
+    example.style.cssText = 'display:block;font-size:12px;word-break:break-all;background:#ffeaea;padding:6px 10px;border-radius:4px;margin-bottom:10px;';
+    example.textContent   = 'https://www.zeffy.com/en-US/donation-form/your-form-slug';
 
     var note = document.createElement('p');
     note.style.cssText = 'font-size:12px;margin:0;color:#a00;';
