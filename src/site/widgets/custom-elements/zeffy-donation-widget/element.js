@@ -48,6 +48,8 @@ var EMBED_PATH_BY_FORM_TYPE = {
   'fundraising':   'donation-form',
 };
 
+// No Zeffy form type is two letters long, so a two-letter segment is always a locale.
+// If that ever changes, this would swallow the new type.
 var LOCALE_SEGMENT = /^[a-z]{2}(-[a-z]{2})?$/i;
 
 function toEmbedUrl(url) {

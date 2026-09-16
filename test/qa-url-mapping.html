@@ -90,6 +90,24 @@
       record(actual === null, `rejected: ${what}`, `${input}<br>got: ${actual === null ? 'error state (correct)' : actual}`);
     }
 
+    // New tab is the shipping default and sends the visitor to the pasted URL
+    // rather than the embed URL, so it only needs the type to be accepted at all.
+    function rendersButtonInNewTabMode(formUrl) {
+      stage.innerHTML = '';
+      const el = document.createElement('zeffy-donation-widget');
+      el.setAttribute('form-url', formUrl);
+      el.setAttribute('button-action', 'new-tab');
+      stage.appendChild(el);
+      return Boolean(el.shadowRoot.querySelector('button'));
+    }
+
+    record(rendersButtonInNewTabMode('https://www.zeffy.com/en-US/ticketing/apparel-shop-3'),
+      'new tab mode accepts a ticketing URL',
+      'https://www.zeffy.com/en-US/ticketing/apparel-shop-3');
+    record(!rendersButtonInNewTabMode('https://www.evil.com/donation-form/my-form'),
+      'new tab mode still rejects another domain',
+      'https://www.evil.com/donation-form/my-form');
+
     stage.innerHTML = '';
     document.getElementById('summary').textContent = `${pass} passed, ${fail} failed`;
     document.title = `${pass} passed, ${fail} failed`;
