@@ -363,6 +363,11 @@ class ZeffyDonationWidget extends HTMLElement {
   _buildButton(embedUrl, formUrl, styleProps) {
     var self    = this;
     var wrapper = document.createElement('div');
+    // Fill the host and centre the button inside it. Without this the wrapper is
+    // a bare block and the button sits at the top-left, unlike the onboarding and
+    // error states which build their own centred box. Column direction keeps the
+    // new-tab fallback below the button rather than beside it.
+    wrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;min-height:40px;';
     var btn     = document.createElement('button');
     btn.style.cssText = this._computeButtonStyle(styleProps);
     btn.textContent   = styleProps.btnText || 'Donate Now';
